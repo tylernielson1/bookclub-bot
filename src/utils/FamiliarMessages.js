@@ -36,7 +36,7 @@ const sessionPermissionsMessages = [
     '🐈‍⬛ This spell belongs to another member of the coven. I can only answer to the witch who summoned it.',
     '🔮 This scrying circle was not cast by you. Please summon your own search.',
     '🕯️ I recognize this spell, but not its caster. Only the summoner may guide it.',
-    '📜 This tome search is bound to another witch. You’ll need to cast your own spell.',
+    '📜 This tome search is bound to another witch. You\'ll need to cast your own spell.',
     '🌙 The enchantment recognizes its original caster and will not answer to another.'
 ];
 
