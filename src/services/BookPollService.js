@@ -77,7 +77,7 @@ class BookPollService {
         this.cleanup(); 
     } 
     
-    async announceWinner(poll) { 
+    async announceWinner(poll, useTieSelector = false) { 
         const channel = await this.client.channels.fetch( poll.channelId );
         
         if (!channel?.isTextBased()) { 
@@ -92,7 +92,8 @@ class BookPollService {
         
         // Make sure the latest poll data is available. 
         const pollData = message.poll; 
-        const winner = this.getWinner( pollData, poll.books );
+        const winner = useTieSelector ? 
+            this.getTiedWinner(pollData, poll.books) : this.getWinner( pollData, poll.books );
         if (!winner) { 
             await this.announceNoWinner(poll); 
             return; 
@@ -104,7 +105,7 @@ class BookPollService {
             throw new Error( `Unable to access announcement channel ${poll.announcementChannelId}.` ); 
         }
         
-        await announcementChannel.send(BookPollView.buildWinnerAnnouncement(winner)); 
+        await announcementChannel.send(BookPollView.buildWinnerAnnouncement(winner.title, useTieSelector)); 
     }
 
     getWinner(poll, books) { 
@@ -112,8 +113,8 @@ class BookPollService {
         
         if (!answers.length) { 
             return null; 
-        } 
-        
+        }
+
         let winningAnswer = null; 
         
         for (const answer of answers) { 
@@ -129,7 +130,33 @@ class BookPollService {
         const answerIndex = answers.findIndex( answer => answer.id === winningAnswer.id ); 
         
         return books[answerIndex] ?? null; 
-    } 
+    }
+
+    getTiedWinner(poll, books) {
+        const answers = [...poll.answers.values()];
+        
+        if (!answers.length) { 
+            return null; 
+        }
+
+        const maxVotes = Math.max(
+            ...answers.map(answer => answer.voteCount)
+        );
+
+        if (maxVotes === 0) {
+            return null;
+        }
+
+        const tiedAnswers = answers.filter(
+            answer => answer.voteCount === maxVotes
+        );
+
+        const winningAnswer = tiedAnswers[Math.floor(Math.random() * tiedAnswers.length)];
+        
+        const answerIndex = answers.findIndex( answer => answer.id === winningAnswer.id ); 
+        
+        return books[answerIndex] ?? null; 
+    }
     
     async announceNoWinner(poll) { 
         if (!poll.announcementChannelId) { 

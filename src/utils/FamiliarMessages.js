@@ -41,19 +41,25 @@ const sessionPermissionsMessages = [
 ];
 
 const pollCreationMessages = [
-    '🔮I\'ve consulted the shelves. They were surprisingly unhelpful, so I\'ve brought you three choices.',
-    '🐈‍⬛My little claws have gathered three tomes. Which one shall we read?',
-    '📚The shelves have been searched, the candles have been lit, and I have three suggestions.',
-    '📜I have brought forth three tomes from the stacks. Surely one shall please the coven.',
-    '🌿The reading circle is hungry. I have prepared three offerings.',
-    '🌙I\'ve done the summoning. You lot can handle the voting.',
-    '✨Three books have crossed my path. I suspect the library is trying to tell us something.'
+    '🔮 I\'ve consulted the shelves. They were surprisingly unhelpful, so I\'ve brought you three choices.',
+    '🐈‍⬛ My little claws have gathered three tomes. Which one shall we read?',
+    '📚 The shelves have been searched, the candles have been lit, and I have three suggestions.',
+    '📜 I have brought forth three tomes from the stacks. Surely one shall please the coven.',
+    '🌿 The reading circle is hungry. I have prepared three offerings.',
+    '🌙 I\'ve done the summoning. You lot can handle the voting.',
+    '✨ Three books have crossed my path. I suspect the library is trying to tell us something.'
 ];
 
 const pollWinnerMessages = [
     (title) => `✨ We have a winner! "${title}" it is. Shall I fetch the tea?`,
     (title) => `🔮 The votes have settled on "${title}". I'm quite curious to see what awaits us inside...`,
     (title) => `🐈‍⬛ Well, well... "${title}" has won the vote. I suppose I'll have to dust off the reading cushions.`
+];
+
+const pollWinnerTieMessages = [
+    (title) => `🔮 The coven couldn't decide, so I made the decision for you. ${title} it is!`,
+    (title) => `🐈‍⬛ It was a tie, so I made an executive magical decision. ${title} wins! Please direct all complaints to the cauldron.`,
+    (title) => `🕯️ The scales were perfectly balanced... until I gave them a little nudge. {title} emerges victorious!`
 ];
 
 function random(messages) {
@@ -83,8 +89,8 @@ module.exports = {
     pollCreation() {
         return random(pollCreationMessages);
     },
-    pollWinner(book) {
-        const selectedMessage = random(pollWinnerMessages);
-        return selectedMessage(book.title);
+    pollWinner(title, wasTied) {
+        const selectedMessage = wasTied ? random(pollWinnerMessages) : random(pollWinnerTieMessages);
+        return selectedMessage(title);
     }
 };
