@@ -1,4 +1,20 @@
 {
   "name": "bookclub-bot",
-  "packageManager": "yarn@4.17.1"
+  "packageManager": "yarn@4.17.1",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.0",
+    "nodemon": "^3.1.14"
+  },
+  "dependencies": {
+    "discord.js": "^14.27.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "redis": "^6.1.0"
+  },
+  "scripts": {
+    "dev": "nodemon main.js",
+    "discord": "nodemon index.js",
+    "deploy": "node deploy.js"
+  }
 }
