@@ -1,11 +1,10 @@
 const BookPollView = require('../ui/BookPollView');
 const FamiliarMessages = require('../utils/FamiliarMessages');
-const { sleep } = require('../utils/utils');
 
 class BookPollService {
-	constructor(client, options = {}) {
+	constructor(client, pollManager, options = {}) {
 		this.client = client;
-		this.polls = new Map();
+		this.pollManager = pollManager;
 		this.pollDuration = options.pollDuration ?? 168;
 		this.announcementChannelId = options.announcementChannelId ?? null;
 		this.discussionChannelId = options.discussionChannelId ?? null;
@@ -32,55 +31,33 @@ class BookPollService {
 			await thread.send(BookPollView.buildBookMessage(book));
 		}
 
-		this.trackPoll(pollMessage, books);
-
-		await sleep(10000);
-
-		await this.testAnnouncement(pollMessage.id);
+		this.pollManager.createPoll({
+			messageId: pollMessage.id,
+			channelId: channel.id,
+			guildId: channel.guildId,
+			books: books,
+			announcementChannelId: this.announcementChannelId,
+			discussionChannelId: this.discussionChannelId,
+			expiresAt: pollMessage.poll.expiresAt.getTime(),
+		});
 
 		return pollMessage;
 	}
 
-	trackPoll(message, books) {
-		if (!message.poll) {
-			throw new Error('Poll message does not contain a poll.');
-		}
-
-		this.polls.set(
-			message.id, {
-				messageId: message.id,
-				channelId: message.channel.id,
-				announcementChannelId: this.announcementChannelId,
-				discussionChannelId: this.discussionChannelId,
-				books,
-				expiresAt: message.poll.expiresAt,
-				announced: false,
-			});
-	}
-
 	async checkExpiredPolls() {
-		for (const poll of this.polls.values()) {
-			if (poll.announced) {
-				continue;
-			}
-
-			if (!poll.expiresAt || Date.now() < poll.expiresAt.getTime()) {
-				continue;
-			}
-
+		console.log('checking for expired polls...');
+		for (const poll of this.pollManager.getExpiredPolls()) {
 			try {
-				await this.announceWinner(poll);
-				poll.announced = true;
+				await this.processExpiredPoll(poll);
 			}
 			catch (error) {
-				console.error(`Failed to announce poll ${poll.messageId}:`, error);
+				console.error(`Failed to process poll ${poll.messageId}:`, error);
 			}
 		}
-
-		this.cleanup();
 	}
 
-	async announceWinner(poll, useTieSelector = false) {
+	async processExpiredPoll(poll, useTieSelector = false) {
+		console.log(`Processing poll ${poll.id}`);
 		const channel = await this.client.channels.fetch(poll.channelId);
 
 		if (!channel?.isTextBased()) {
@@ -98,19 +75,30 @@ class BookPollService {
 		const winner = useTieSelector ?
 			this.getTiedWinner(pollData, poll.books) : this.getWinner(pollData, poll.books);
 		if (!winner) {
-			await this.announceNoWinner(poll);
+			const noWinnerMessage = await this.announceNoWinner(poll);
+			const completed = this.pollManager.completePoll(poll.id, {
+				winner: null,
+				announcementMessageId: noWinnerMessage?.id ?? null,
+				discussionThreadId: null
+			});
+
+			if (!completed) {
+				console.warn(`Poll ${poll.id} was already completed.`);
+			}
 			return;
 		}
 
-		const announcementChannel = await this.client.channels.fetch(poll.announcementChannelId);
+		const result = await this.announceWinner(poll, winner, useTieSelector);
 
-		if (!announcementChannel?.isTextBased()) {
-			throw new Error(`Unable to access announcement channel ${poll.announcementChannelId}.`);
+		const completed = this.pollManager.completePoll(poll.id, {
+			winner: winner.title,
+			announcementMessageId: result.announcement?.id ?? null,
+			discussionThreadId: result.discussion?.id ?? null,
+		});
+
+		if (!completed) {
+			console.warn(`Poll ${poll.id} was already completed.`);
 		}
-
-		const discussion = await this.createDiscussion(winner);
-
-		await announcementChannel.send(BookPollView.buildWinnerAnnouncement(winner.title, useTieSelector, discussion?.url));
 	}
 
 	getWinner(poll, books) {
@@ -174,49 +162,144 @@ class BookPollService {
 			throw new Error(`Unable to access announcement channel ${poll.announcementChannelId}.`);
 		}
 
-		await channel.send(BookPollView.buildNoWinnerAnnouncement());
-	}
+		if (poll.announcementMessageId) {
+			try {
+				return await channel.messages.fetch(poll.announcementMessageId);
+			}
+			catch(error) {
+				if (error.code !== 10008) throw error;
 
-	async testAnnouncement(pollMessageId) {
-		const poll = this.polls.get(pollMessageId);
+				console.warn(`Announcement ${poll.announcementMessageId} could not be found. Creating new announcement.`);
 
-		if (!poll) {
-			console.error('Poll not found');
+				poll.announcementMessageId = null;
+			}
 		}
 
-		await this.announceWinner(poll);
+		const announcement = await channel.send(BookPollView.buildNoWinnerAnnouncement());
+
+		this.pollManager.saveAnnouncementMessage(poll.id, announcement.id);
+
+		poll.announcementMessageId = announcement.id;
+
+		return announcement;
 	}
 
-	async createDiscussion(book) {
-		if (!this.discussionChannelId) {
+	async announceWinner(poll, winner, useTieSelector) {
+		const announcementChannel = await this.client.channels.fetch(poll.announcementChannelId);
+
+		if (!announcementChannel?.isTextBased()) {
+			throw new Error(`Unable to access announcement channel ${poll.announcementChannelId}.`);
+		}
+
+		let discussion = null;
+
+		if (poll.discussionThreadId) {
+			try {
+				discussion = await this.client.channels.fetch(
+					poll.discussionThreadId,
+				);
+
+				if (!discussion?.isThread()) {
+					throw new Error(
+						`Channel ${poll.discussionThreadId} is not a thread.`,
+					);
+				}
+			} catch (error) {
+				if (error.code !== 10003) {
+					throw error;
+				}
+
+				console.warn(
+					`Discussion ${poll.discussionThreadId} could not be found. Creating new thread.`,
+				);
+
+				poll.discussionThreadId = null;
+			}
+		}
+
+		if (!discussion) {
+			discussion = await this.createDiscussion(poll, winner);
+
+			if (discussion) {
+				this.pollManager.saveDiscussionThread(
+					poll.id,
+					discussion.id,
+				);
+
+				poll.discussionThreadId = discussion.id;
+			}
+		}
+
+		if (poll.announcementMessageId) {
+			try {
+				const announcement = await announcementChannel.messages.fetch(
+					poll.announcementMessageId,
+				);
+
+				return {
+					announcement,
+					discussion,
+				};
+			}
+			catch(error) {
+				if (error.code !== 10008) throw error;
+
+				console.warn(`Announcement ${poll.announcementMessageId} could not be found. Creating new announcement.`);
+
+				poll.announcementMessageId = null;
+			}
+		}
+
+		const announcement = await announcementChannel.send(
+			BookPollView.buildWinnerAnnouncement(
+				winner.title,
+				useTieSelector,
+				discussion?.url,
+			),
+		);
+
+		this.pollManager.saveAnnouncementMessage(
+			poll.id,
+			announcement.id,
+		);
+
+		poll.announcementMessageId = announcement.id;
+		
+		return {
+			announcement,
+			discussion,
+		};
+	}
+
+	async createDiscussion(poll, book) {
+		if (!poll.discussionChannelId) {
 			return;
 		}
 
-		const discussionChannel = await this.client.channels.fetch(this.discussionChannelId);
+		const discussionChannel = await this.client.channels.fetch(poll.discussionChannelId);
 
 		if (!discussionChannel?.isThreadOnly()) {
-			throw new Error(`Channel ${this.discussionChannelId} is not a forum channel.`);
+			throw new Error(`Channel ${poll.discussionChannelId} is not a forum channel.`);
 		}
 
-		const thread = await discussionChannel.threads.create({
+		return await discussionChannel.threads.create({
 			name: book.title,
 			message: FamiliarMessages.discussions(book.title),
 			reason: 'Create a book discussion for this month\'s winner.',
 		});
-
-		return thread;
-	}
-
-	cleanup() {
-		for (const [messageId, poll] of this.polls) {
-			if (poll.announced) {
-				this.polls.delete(messageId);
-			}
-		}
 	}
 
 	start(interval = 30_000) {
-		this.interval = setInterval(() => this.checkExpiredPolls(), interval);
+		this.checkExpiredPolls().catch(error => {
+			console.error('Failed initial poll check:', error);
+		});
+
+		this.interval = setInterval(() => {
+			this.checkExpiredPolls().catch(error => {
+				console.error('Failed poll check:', error);
+			});
+		}, interval);
+
 		return this.interval;
 	}
 

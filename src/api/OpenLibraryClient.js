@@ -52,8 +52,8 @@ class OpenLibraryClient {
 		const detailsJson = await this.getIsbnDetails(isbn);
 		const [authorJson, worksJson] = await Promise.all([this.getAuthors(detailsJson.authors?.[0]?.key), this.getWorks(detailsJson.works?.[0]?.key)]);
 
-		const goodreadsId = detailsJson.identifiers?.goodreads[0];
-		const storygraphId = detailsJson.identifiers?.storygraph[0];
+		const goodreadsId = detailsJson.identifiers?.goodreads?.[0];
+		const storygraphId = detailsJson.identifiers?.storygraph?.[0];
 
 		const bookDetails = new BookDetails(
 			detailsJson.title,
