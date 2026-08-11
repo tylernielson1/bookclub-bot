@@ -2,9 +2,9 @@ const { Client, Collection, Events, GatewayIntentBits, MessageFlags } = require(
 const { handleComponent } = require('./src/interactions/componentHandler');
 const fs = require('node:fs');
 const path = require('node:path');
-const SessionManager = require('./src/cache/managers/SessionManager');
 const BookPollService = require('./src/services/BookPollService');
 const { connectCache } = require('./src/cache');
+const { pollManager } = require('./src/db');
 
 require('dotenv').config();
 
@@ -19,12 +19,8 @@ const client = new Client({
 client.once(Events.ClientReady, (readyClient) => {
 	console.log(`Ready! Logged in as ${readyClient.user.tag}`);
 
-	setInterval(() => {
-		SessionManager.cleanup();
-	}, 60 * 60 * 1000);
-
-	const bookPollService = new BookPollService(client, {
-		pollDuration: 1,
+	const bookPollService = new BookPollService(client, pollManager, {
+		pollDuration: 168,
 		announcementChannelId: process.env.ANNOUNCEMENT_CHANNEL_ID,
 		discussionChannelId: process.env.DISCUSSION_CHANNEL_ID,
 	});
