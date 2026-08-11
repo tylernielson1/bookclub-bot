@@ -1,6 +1,11 @@
 const js = require('@eslint/js');
+const { globalIgnores } = require('eslint/config');
 
 module.exports = [
+	globalIgnores([
+		'.pnp.cjs',
+		'.pnp.loader.mjs',
+	]),
 	js.configs.recommended,
 	{
 		languageOptions: {
