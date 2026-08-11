@@ -1,4 +1,4 @@
-const SearchSession = require("../entities/SearchSession");
+const SearchSession = require('../entities/SearchSession');
 
 const SESSION_CACHE_PREFIX = 'session-cache';
 const SESSION_TTL = 15 * 60;

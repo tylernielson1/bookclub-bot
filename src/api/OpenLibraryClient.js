@@ -1,16 +1,17 @@
-const env = require('dotenv').config();
 const BookDetails = require('../entities/BookDetails');
 const Book = require('../entities/Book');
 const Edition = require('../entities/Edition');
 const EditionSelector = require('./EditionSelector');
 const { parseYear, parseDescription } = require('../utils/utils');
 
+require('dotenv').config();
+
 const OPENLIBRARY_URL = 'https://openlibrary.org';
 const CACHE_KEY_PREFIX = 'openlibrary';
 const CACHE_TTL = {
 	SEARCH: 60 * 60,
 	DETAILS: 60 * 60,
-	AUTHOR: 60 * 60 * 24
+	AUTHOR: 60 * 60 * 24,
 };
 
 class OpenLibraryClient {
@@ -22,14 +23,14 @@ class OpenLibraryClient {
 		const titleEncoded = encodeURIComponent(title);
 		const authorEncoded = author !== null ? encodeURIComponent(author) : '';
 
-		const query = `/search.json?q=title:${titleEncoded}`;
+		let query = `/search.json?q=title:${titleEncoded}`;
 
 		if (authorEncoded) query = query + `+author:${authorEncoded}`;
 
 		const dataJson = await this.cache.getOrFetch(
 			`${CACHE_KEY_PREFIX}:search:${query}`,
 			() => this.executeApiCall(query),
-			CACHE_TTL.SEARCH
+			CACHE_TTL.SEARCH,
 		);
 
 		const books = (dataJson.docs || []).map(book => {
@@ -38,7 +39,7 @@ class OpenLibraryClient {
 				book.author_name ?? 'Unknown',
 				book.first_publish_year ?? null,
 				book.cover_edition_key ?? null,
-				book.key ?? null
+				book.key ?? null,
 			);
 		});
 
@@ -56,18 +57,18 @@ class OpenLibraryClient {
 
 		const bookDetails = new BookDetails(
 			detailsJson.title,
-			authorJson.name, // get from authors api.
+			authorJson.name,
 			detailsJson.publishers[0],
 			parseYear(detailsJson.publish_date) ?? '',
-			parseDescription(worksJson.description), // get from works api call.
+			parseDescription(worksJson.description),
 			detailsJson.covers[0] ?? '',
 			detailsJson.isbn_13[0],
 			detailsJson.works[0].key,
 			null,
 			`https://www.goodreads.com/book/show/${goodreadsId}`,
 			`https://app.thestorygraph.com/books/${storygraphId}`,
-			detailsJson.pagination
-		)
+			detailsJson.pagination,
+		);
 
 		return bookDetails;
 	}
@@ -76,14 +77,14 @@ class OpenLibraryClient {
 		const titleEncoded = encodeURIComponent(title);
 		const authorEncoded = author !== null ? encodeURIComponent(author) : '';
 
-		const query = `/search.json?q=title:${titleEncoded}`;
+		let query = `/search.json?q=title:${titleEncoded}`;
 
 		if (authorEncoded) query = query + `+author:${authorEncoded}`;
 
 		const dataJson = await this.cache.getOrFetch(
 			`${CACHE_KEY_PREFIX}:search:${query}`,
 			() => this.executeApiCall(query),
-			CACHE_TTL.SEARCH
+			CACHE_TTL.SEARCH,
 		);
 
 		if (!dataJson.docs) return [];
@@ -119,7 +120,7 @@ class OpenLibraryClient {
 			bestEdition.key,
 			bestEdition.goodreadsLink,
 			bestEdition.storygraphLink,
-			bestEdition.pages
+			bestEdition.pages,
 		);
 
 		return bookDetails;
@@ -131,7 +132,7 @@ class OpenLibraryClient {
 		return await this.cache.getOrFetch(
 			`${CACHE_KEY_PREFIX}:authors:${authorQuery}`,
 			() => this.executeApiCall(authorQuery),
-			CACHE_TTL.AUTHOR
+			CACHE_TTL.AUTHOR,
 		);
 	}
 
@@ -141,7 +142,7 @@ class OpenLibraryClient {
 		return await this.cache.getOrFetch(
 			`${CACHE_KEY_PREFIX}:works:${worksQuery}`,
 			() => this.executeApiCall(worksQuery),
-			CACHE_TTL.DETAILS
+			CACHE_TTL.DETAILS,
 		);
 	}
 
@@ -150,7 +151,7 @@ class OpenLibraryClient {
 		return await this.cache.getOrFetch(
 			`${CACHE_KEY_PREFIX}:editions:${editionsQuery}`,
 			() => this.executeApiCall(editionsQuery),
-			CACHE_TTL.DETAILS
+			CACHE_TTL.DETAILS,
 		);
 	}
 
@@ -160,7 +161,7 @@ class OpenLibraryClient {
 		return await this.cache.getOrFetch(
 			`${CACHE_KEY_PREFIX}:isbn:${isbnQuery}`,
 			() => this.executeApiCall(isbnQuery),
-			CACHE_TTL.DETAILS
+			CACHE_TTL.DETAILS,
 		);
 	}
 
@@ -171,8 +172,8 @@ class OpenLibraryClient {
 		const options = {
 			method: 'GET',
 			headers: {
-				'User-Agent': `${process.env.APP_NAME} (${process.env.OPENLIBRARY_EMAIL})`
-			}
+				'User-Agent': `${process.env.APP_NAME} (${process.env.OPENLIBRARY_EMAIL})`,
+			},
 		};
 
 		const response = await fetch(url, options);

@@ -60,7 +60,7 @@ class SearchSession {
 		session.page = data.page;
 		session.pageSize = data.pageSize;
 		session.selectedBook = data.selectedBook;
-	
+
 		return session;
 	}
 }
