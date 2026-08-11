@@ -53,13 +53,28 @@ const pollCreationMessages = [
 const pollWinnerMessages = [
     (title) => `✨ We have a winner! "${title}" it is. Shall I fetch the tea?`,
     (title) => `🔮 The votes have settled on "${title}". I'm quite curious to see what awaits us inside...`,
-    (title) => `🐈‍⬛ Well, well... "${title}" has won the vote. I suppose I'll have to dust off the reading cushions.`
+    (title) => `🐈‍⬛ Well, well, well... "${title}" has won the vote. I suppose I'll have to dust off the reading cushions.`
 ];
 
 const pollWinnerTieMessages = [
     (title) => `🔮 The coven couldn't decide, so I made the decision for you. ${title} it is!`,
     (title) => `🐈‍⬛ It was a tie, so I made an executive magical decision. ${title} wins! Please direct all complaints to the cauldron.`,
     (title) => `🕯️ The scales were perfectly balanced... until I gave them a little nudge. {title} emerges victorious!`
+];
+
+const noPollWinnerMessages = [
+    '🐈‍⬛ Nobody chose? Fine. I shall choose next time. You clearly cannot be trusted with this responsibility.',
+    '🌙 The votes have faded into silence. It seems the coven could not be persuaded this time.',
+    '🔮 The crystal reveals no victor. Perhaps the books are waiting for a more decisive summoning.'
+];
+
+const bookDiscussionMessages = [
+    (title) => `📚 The coven has spoken! **${title}** has been chosen as our next read. Gather your thoughts, sharpen your quills, and let the discussion begin.`, 
+    (title) => `🔮 The reading has been decided. **${title}** now awaits the coven. Enter if you dare, and bring your theories with you.`,
+    (title) => `🐈‍⬛ The votes have spoken, and **${title}** has been dragged from the shelves. I expect everyone to actually read it this time.`,
+    (title) => `🕯️ The candles are lit, the tea is steeping, and **${title}** has been chosen. The reading circle is officially summoned.`,
+    (title) => `✨ A new tome has been selected! **${title}** shall be our next literary adventure. May the pages be kind and the spoilers remain contained.`,
+    (title) => `🌙 Fate has chosen **${title}** for the coven. Turn the first page, brave reader, and meet me here when you've discovered what lies within.`
 ];
 
 function random(messages) {
@@ -90,7 +105,14 @@ module.exports = {
         return random(pollCreationMessages);
     },
     pollWinner(title, wasTied) {
-        const selectedMessage = wasTied ? random(pollWinnerMessages) : random(pollWinnerTieMessages);
+        const selectedMessage = wasTied ? random(pollWinnerTieMessages) : random(pollWinnerMessages);
+        return selectedMessage(title);
+    },
+    noPollWinner() {
+        return random(noPollWinnerMessages);
+    },
+    discussions(title) {
+        const selectedMessage = random(bookDiscussionMessages);
         return selectedMessage(title);
     }
 };

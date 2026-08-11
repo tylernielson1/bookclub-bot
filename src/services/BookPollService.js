@@ -7,7 +7,8 @@ class BookPollService {
         this.client = client; 
         this.polls = new Map();
         this.pollDuration = options.pollDuration ?? 168; // 7 days 
-        this.announcementChannelId = options.announcementChannelId ?? null; 
+        this.announcementChannelId = options.announcementChannelId ?? null;
+        this.discussionChannelId = options.discussionChannelId ?? null;
     } 
     
     async createPoll(channel, books, pollName) { 
@@ -25,7 +26,7 @@ class BookPollService {
             name: '📚 Book Discussion',
             autoArchiveDuration: 10080,
             reason: 'Book poll discussion' 
-        }); 
+        });
         
         for (const book of books) {
             await thread.send(BookPollView.buildBookMessage(book)); 
@@ -49,7 +50,8 @@ class BookPollService {
             message.id, { 
                 messageId: message.id, 
                 channelId: message.channel.id, 
-                announcementChannelId: this.announcementChannelId, 
+                announcementChannelId: this.announcementChannelId,
+                discussionChannelId: this.discussionChannelId,
                 books, 
                 expiresAt: message.poll.expiresAt, 
                 announced: false 
@@ -91,21 +93,23 @@ class BookPollService {
         } 
         
         // Make sure the latest poll data is available. 
-        const pollData = message.poll; 
+        const pollData = message.poll;
         const winner = useTieSelector ? 
             this.getTiedWinner(pollData, poll.books) : this.getWinner( pollData, poll.books );
         if (!winner) { 
             await this.announceNoWinner(poll); 
             return; 
-        } 
+        }
         
         const announcementChannel = await this.client.channels.fetch( poll.announcementChannelId );
         
         if (!announcementChannel?.isTextBased()) { 
             throw new Error( `Unable to access announcement channel ${poll.announcementChannelId}.` ); 
         }
+
+        const discussion = await this.createDiscussion(winner); 
         
-        await announcementChannel.send(BookPollView.buildWinnerAnnouncement(winner.title, useTieSelector)); 
+        await announcementChannel.send(BookPollView.buildWinnerAnnouncement(winner.title, useTieSelector, discussion?.url)); 
     }
 
     getWinner(poll, books) { 
@@ -180,6 +184,26 @@ class BookPollService {
         }
 
         await this.announceWinner(poll);
+    }
+
+    async createDiscussion(book) {
+        if (!this.discussionChannelId) {
+            return;
+        }
+
+        const discussionChannel = await this.client.channels.fetch(this.discussionChannelId);
+
+        if (!discussionChannel?.isThreadOnly()) {
+            throw new Error(`Channel ${this.discussionChannelId} is not a forum channel.`);
+        }
+
+        const thread = await discussionChannel.threads.create({
+            name: book.title,
+            message: FamiliarMessages.discussions(book.title),
+            reason: 'Create a book discussion for this month\'s winner.'
+        });
+
+        return thread;
     }
     
     cleanup() { 

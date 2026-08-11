@@ -23,7 +23,8 @@ client.once(Events.ClientReady, (readyClient) => {
 
 	const bookPollService = new BookPollService(client, {
 		pollDuration: 1,
-		announcementChannelId: process.env.ANNOUNCEMENT_CHANNEL_ID
+		announcementChannelId: process.env.ANNOUNCEMENT_CHANNEL_ID,
+		discussionChannelId: process.env.DISCUSSION_CHANNEL_ID
 	});
 
 	client.bookPollService = bookPollService;

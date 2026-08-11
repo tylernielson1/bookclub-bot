@@ -51,15 +51,19 @@ class BookPollView {
         };
     }
 
-    buildWinnerAnnouncement(book) {
+    buildWinnerAnnouncement(book, wasTied, link) {
+        let joinLink = '';
+        if (link) {
+            joinLink = `\nJoin the discussion here: ${link}.`
+        }
         return {
-            content: `@everyone ${FamiliarMessages.pollWinner(book)}`
+            content: `@everyone ${FamiliarMessages.pollWinner(book, wasTied)}${joinLink}`
         };
     }
 
     buildNoWinnerAnnouncement() {
         return {
-            content: 'No one has won.'
+            content: FamiliarMessages.noPollWinner()
         };
     }
 }
