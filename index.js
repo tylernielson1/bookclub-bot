@@ -2,8 +2,9 @@ const { Client, Collection, Events, GatewayIntentBits, MessageFlags } = require(
 const { handleComponent } = require('./src/interactions/componentHandler');
 const fs = require('node:fs');
 const path = require('node:path');
-const SessionManager = require('./src/sessions/SessionManager');
+const SessionManager = require('./src/cache/managers/SessionManager');
 const BookPollService = require('./src/services/BookPollService');
+const { connectCache } = require('./src/cache');
 
 require('dotenv').config();
 
@@ -92,5 +93,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
 	}
 });
 
-// login to Discord
-client.login(process.env.DISCORD_TOKEN);
+async function start() {
+	await connectCache();
+
+	await client.login(process.env.DISCORD_TOKEN);
+}
+
+start().catch((error) => {
+	console.error('Failed to start bot:', error);
+	process.exit(1);
+});

@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const OpenLibraryClient = require('../../api/OpenLibraryClient');
+const { openLibraryClient } = require('../../api');
 const FamiliarMessages = require('../../utils/FamiliarMessages');
 
 async function resolveBook(input) {
@@ -10,11 +10,11 @@ async function resolveBook(input) {
 	let result;
 
 	if (parsed.type === 'isbn') {
-		result = await OpenLibraryClient.searchIsbn(parsed.value);
+		result = await openLibraryClient.searchIsbn(parsed.value);
 	}
 
 	if (parsed.type === 'titleAuthor') {
-		result = await OpenLibraryClient.searchTitleAuthorDetails(parsed.title, parsed.author);
+		result = await openLibraryClient.searchTitleAuthorDetails(parsed.title, parsed.author);
 	}
 
 	return result;

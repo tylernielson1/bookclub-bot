@@ -1,17 +1,17 @@
 const { MessageFlags, SlashCommandBuilder } = require('discord.js');
-const OpenLibraryClient = require('../../api/OpenLibraryClient');
+const { openLibraryClient } = require('../../api');
+const { sessionManager } = require('../../cache');
 const BookDetailView = require('../../ui/BookDetailView');
 const BookSearchView = require('../../ui/BookSearchView');
 const FamiliarMessages = require('../../utils/FamiliarMessages');
-const SearchSession = require('../../sessions/SearchSession');
-const SessionManager = require('../../sessions/SessionManager');
+const SearchSession = require('../../cache/entities/SearchSession');
 const { sleep } = require('../../utils/utils');
 
 async function handleIsbnSearch(interaction, isbn) {
 	let book;
 	try {
 		book = await timedSearch(() =>
-			OpenLibraryClient.searchIsbn(isbn),
+			openLibraryClient.searchIsbn(isbn),
 		);
 	}
 	catch (error) {
@@ -36,7 +36,7 @@ async function handleTitleSearch(interaction, title, author) {
 	let books;
 	try {
 		books = await timedSearch(() =>
-			OpenLibraryClient.searchTitleAuthor(title, author),
+			openLibraryClient.searchTitleAuthor(title, author),
 		);
 	}
 	catch (error) {
@@ -67,7 +67,7 @@ async function handleTitleSearch(interaction, title, author) {
 
 	const message = await interaction.fetchReply();
 
-	SessionManager.set(message.id, session);
+	sessionManager.set(message.id, session);
 }
 
 async function timedSearch(callback) {

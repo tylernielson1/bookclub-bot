@@ -1,14 +1,13 @@
 const { MessageFlags } = require('discord.js');
-const SessionManager = require('../sessions/SessionManager');
 const BookSearchView = require('../ui/BookSearchView');
 const BookDetailView = require('../ui/BookDetailView');
 const FamiliarMessages = require('../utils/FamiliarMessages');
-const OpenLibraryClient = require('../api/OpenLibraryClient');
+const { openLibraryClient } = require('../api');
+const { sessionManager } = require('../cache');
 
 async function handleComponent(interaction) {
-	const session = SessionManager.get(
-		interaction.message.id,
-	);
+	const messageId = interaction.message.id;
+	const session = await sessionManager.get(messageId);
 
 	if (!session) {
 		return interaction.reply({
@@ -30,12 +29,16 @@ async function handleComponent(interaction) {
 		case 'books_next':
 			session.nextPage();
 
+			await sessionManager.set(messageId, session);
+
 			return interaction.update(
 				BookSearchView.render(session),
 			);
 
 		case 'books_prev':
 			session.previousPage();
+
+			await sessionManager.set(messageId, session);
 
 			return interaction.update(
 				BookSearchView.render(session),
@@ -48,8 +51,6 @@ async function handleComponent(interaction) {
 
 			const book = session.select(index);
 
-			console.log(book);
-
 			if (!book) {
 				return interaction.reply({
 					content: FamiliarMessages.noResults(),
@@ -58,7 +59,9 @@ async function handleComponent(interaction) {
 			}
 
 			// Fetch full details
-			const details = await OpenLibraryClient.getBookDetails(book.worksKey);
+			const details = await openLibraryClient.getBookDetails(book.worksKey);
+
+			await sessionManager.set(messageId, session);
 
 			return interaction.update(
 				await BookDetailView.render(details),
@@ -67,6 +70,8 @@ async function handleComponent(interaction) {
 
 		case 'books_back':
 			session.selectedBook = null;
+
+			await sessionManager.set(messageId, session);
 
 			return interaction.update(
 				BookSearchView.render(session),

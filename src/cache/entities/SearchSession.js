@@ -6,7 +6,6 @@ class SearchSession {
 		this.page = 0;
 		this.pageSize = 5;
 		this.selectedBook = null;
-		this.expiresAt = Date.now() + (15 * 60 * 1000);
 	}
 
 	get totalPages() {
@@ -40,8 +39,29 @@ class SearchSession {
 		return this.selectedBook;
 	}
 
-	get expired() {
-		return Date.now() > this.expiresAt;
+	toJSON() {
+		return {
+			userId: this.userId,
+			books: this.books,
+			query: this.query,
+			page: this.page,
+			pageSize: this.pageSize,
+			selectedBook: this.selectedBook,
+		};
+	}
+
+	static fromJSON(data) {
+		const session = new SearchSession(
+			data.userId,
+			data.books,
+			data.query,
+		);
+
+		session.page = data.page;
+		session.pageSize = data.pageSize;
+		session.selectedBook = data.selectedBook;
+
+		return session;
 	}
 }
 
