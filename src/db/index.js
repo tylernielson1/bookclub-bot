@@ -9,5 +9,5 @@ db.initialize();
 const pollManager = new PollManager(db);
 
 module.exports = {
-    pollManager
+	pollManager,
 };

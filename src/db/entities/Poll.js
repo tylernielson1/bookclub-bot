@@ -1,5 +1,5 @@
 class Poll {
-constructor({
+	constructor({
 		id = null,
 		messageId,
 		channelId,

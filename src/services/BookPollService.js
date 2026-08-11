@@ -79,7 +79,7 @@ class BookPollService {
 			const completed = this.pollManager.completePoll(poll.id, {
 				winner: null,
 				announcementMessageId: noWinnerMessage?.id ?? null,
-				discussionThreadId: null
+				discussionThreadId: null,
 			});
 
 			if (!completed) {
@@ -166,7 +166,7 @@ class BookPollService {
 			try {
 				return await channel.messages.fetch(poll.announcementMessageId);
 			}
-			catch(error) {
+			catch (error) {
 				if (error.code !== 10008) throw error;
 
 				console.warn(`Announcement ${poll.announcementMessageId} could not be found. Creating new announcement.`);
@@ -204,7 +204,8 @@ class BookPollService {
 						`Channel ${poll.discussionThreadId} is not a thread.`,
 					);
 				}
-			} catch (error) {
+			}
+			catch (error) {
 				if (error.code !== 10003) {
 					throw error;
 				}
@@ -241,7 +242,7 @@ class BookPollService {
 					discussion,
 				};
 			}
-			catch(error) {
+			catch (error) {
 				if (error.code !== 10008) throw error;
 
 				console.warn(`Announcement ${poll.announcementMessageId} could not be found. Creating new announcement.`);
@@ -264,7 +265,7 @@ class BookPollService {
 		);
 
 		poll.announcementMessageId = announcement.id;
-		
+
 		return {
 			announcement,
 			discussion,

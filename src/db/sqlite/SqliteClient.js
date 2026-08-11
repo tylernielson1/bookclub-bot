@@ -3,26 +3,26 @@ const path = require('node:path');
 const fs = require('node:fs');
 
 class SQLiteClient {
-    constructor(databasePath = './data/bookclub.db') {
-        this.databasePath = path.resolve(databasePath);
-        const directory = path.dirname(this.databasePath);
-        
-        if (!fs.existsSync(directory)) {
-            fs.mkdirSync(directory, { recursive: true });
-        }
+	constructor(databasePath = './data/bookclub.db') {
+		this.databasePath = path.resolve(databasePath);
+		const directory = path.dirname(this.databasePath);
 
-        this.db = new Database(this.databasePath);
-        this.configure();
-    }
+		if (!fs.existsSync(directory)) {
+			fs.mkdirSync(directory, { recursive: true });
+		}
 
-    configure() {
-        this.db.pragma('foreign_keys = ON');
-        this.db.pragma('busy_timeout = 5000');
-        this.db.pragma('journal_mode = WAL');
-    }
+		this.db = new Database(this.databasePath);
+		this.configure();
+	}
 
-    initialize() {
-        this.db.exec(`
+	configure() {
+		this.db.pragma('foreign_keys = ON');
+		this.db.pragma('busy_timeout = 5000');
+		this.db.pragma('journal_mode = WAL');
+	}
+
+	initialize() {
+		this.db.exec(`
             CREATE TABLE IF NOT EXISTS polls (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 message_id TEXT NOT NULL UNIQUE,
@@ -40,12 +40,12 @@ class SQLiteClient {
                 processed_at INTEGER
             );
         `);
-    }
+	}
 
-    run(sql, params = []) {
-        const preparedStatement = this.db.prepare(sql);
-        return preparedStatement.run(params);
-    }
+	run(sql, params = []) {
+		const preparedStatement = this.db.prepare(sql);
+		return preparedStatement.run(params);
+	}
 
 	get(sql, params = []) {
 		const statement = this.db.prepare(sql);

@@ -1,11 +1,11 @@
 const Poll = require('../entities/Poll');
 
 class PollManager {
-    constructor(db) {
-        this.db = db;
-    }
+	constructor(db) {
+		this.db = db;
+	}
 
-    mapRowToPoll(row) {
+	mapRowToPoll(row) {
 		return new Poll({
 			id: row.id,
 			messageId: row.message_id,
@@ -24,9 +24,9 @@ class PollManager {
 		});
 	}
 
-    createPoll(data) {
-        return this.db.run(
-            `
+	createPoll(data) {
+		return this.db.run(
+			`
             INSERT INTO polls (
                 message_id,
                 channel_id,
@@ -38,75 +38,75 @@ class PollManager {
             )
             VALUES(?, ?, ?, ?, ?, ?, ?)
             `,
-            [
-                data.messageId,
-                data.channelId,
-                data.guildId,
-                data.expiresAt,
-                data.announcementChannelId,
-                data.discussionChannelId,
-                JSON.stringify(data.books)
-            ],
-        );
-    }
+			[
+				data.messageId,
+				data.channelId,
+				data.guildId,
+				data.expiresAt,
+				data.announcementChannelId,
+				data.discussionChannelId,
+				JSON.stringify(data.books),
+			],
+		);
+	}
 
-    getPoll(id) {
-        const row = this.db.get(
-            `
+	getPoll(id) {
+		const row = this.db.get(
+			`
             SELECT *
             FROM polls
             WHERE id = ?
             `,
-            [id]
-        );
+			[id],
+		);
 
-        return row ? this.mapRowToPoll(row) : null;
-    }
+		return row ? this.mapRowToPoll(row) : null;
+	}
 
-    getPollByMessageId(messageId) {
-        const row = this.db.get(
-            `
+	getPollByMessageId(messageId) {
+		const row = this.db.get(
+			`
             SELECT *
             FROM polls
             WHERE message_id = ?
             `,
-            [messageId],
-        );
+			[messageId],
+		);
 
-        return row ? this.mapRowToPoll(row) : null;
-    }
+		return row ? this.mapRowToPoll(row) : null;
+	}
 
-    getActivePolls() {
-        const rows = this.db.all(
-            `
+	getActivePolls() {
+		const rows = this.db.all(
+			`
             SELECT *
             FROM polls
             WHERE status = 'active'
             ORDER BY expires_at ASC
-            `
-        );
+            `,
+		);
 
-        return rows.map(row => this.mapRowToPoll(row));
-    }
+		return rows.map(row => this.mapRowToPoll(row));
+	}
 
-    getExpiredPolls() {
-        const rows = this.db.all(
-            `
+	getExpiredPolls() {
+		const rows = this.db.all(
+			`
             SELECT *
             FROM polls
             WHERE status = 'active'
             AND expires_at <= ?
             ORDER BY expires_at ASC
             `,
-            [Date.now()],
-        );
+			[Date.now()],
+		);
 
-        return rows.map(row => this.mapRowToPoll(row));
-    }
+		return rows.map(row => this.mapRowToPoll(row));
+	}
 
-    completePoll(id, results) {
-        const result = this.db.run(
-            `
+	completePoll(id, results) {
+		const result = this.db.run(
+			`
             UPDATE polls
             SET
                 status = 'completed',
@@ -117,39 +117,39 @@ class PollManager {
             WHERE id = ?
             AND status = 'active'
             `,
-            [
-                results.winner,
-                results.announcementMessageId,
-                results.discussionThreadId,
-                Date.now(),
-                id
-            ],
-        );
+			[
+				results.winner,
+				results.announcementMessageId,
+				results.discussionThreadId,
+				Date.now(),
+				id,
+			],
+		);
 
-        return result.changes > 0;
-    }
+		return result.changes > 0;
+	}
 
-    saveDiscussionThread(id, threadId) {
-        return this.db.run(
-            `
+	saveDiscussionThread(id, threadId) {
+		return this.db.run(
+			`
             UPDATE polls
             SET discussion_thread_id = ?
             WHERE id = ?
             `,
-            [threadId, id],
-        );
-    }
+			[threadId, id],
+		);
+	}
 
-    saveAnnouncementMessage(id, messageId) {
-        return this.db.run(
-            `
+	saveAnnouncementMessage(id, messageId) {
+		return this.db.run(
+			`
             UPDATE polls
             SET announcement_message_id = ?
             WHERE id = ?
             `,
-            [messageId, id],
-        );
-    }
+			[messageId, id],
+		);
+	}
 }
 
 module.exports = PollManager;
