@@ -1,6 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
 const { backButton } = require('./components');
-const OpenLibraryClient = require('../api/OpenLibraryClient');
 const { truncate } = require('../utils/utils');
 
 class BookDetailView {

@@ -6,7 +6,7 @@ class BookPollService {
 	constructor(client, options = {}) {
 		this.client = client;
 		this.polls = new Map();
-		this.pollDuration = options.pollDuration ?? 168; // 7 days
+		this.pollDuration = options.pollDuration ?? 168;
 		this.announcementChannelId = options.announcementChannelId ?? null;
 		this.discussionChannelId = options.discussionChannelId ?? null;
 	}

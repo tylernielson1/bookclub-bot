@@ -1,9 +1,10 @@
-const env = require('dotenv').config();
 const BookDetails = require('../entities/BookDetails');
 const Book = require('../entities/Book');
 const Edition = require('../entities/Edition');
 const EditionSelector = require('./EditionSelector');
 const { parseYear, parseDescription } = require('../utils/utils');
+
+require('dotenv').config();
 
 const OPENLIBRARY_URL = 'https://openlibrary.org';
 
@@ -42,10 +43,10 @@ async function searchIsbn(isbn) {
 
 	const bookDetails = new BookDetails(
 		detailsJson.title,
-		authorJson.name, // get from authors api.
+		authorJson.name,
 		detailsJson.publishers?.[0],
 		parseYear(detailsJson.publish_date) ?? '',
-		parseDescription(worksJson.description), // get from works api call.
+		parseDescription(worksJson.description),
 		detailsJson.covers?.[0] ?? '',
 		detailsJson.isbn_13?.[0],
 		detailsJson.works?.[0].key,

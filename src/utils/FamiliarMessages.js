@@ -59,7 +59,7 @@ const pollWinnerMessages = [
 const pollWinnerTieMessages = [
 	(title) => `🔮 The coven couldn't decide, so I made the decision for you. ${title} it is!`,
 	(title) => `🐈‍⬛ It was a tie, so I made an executive magical decision. ${title} wins! Please direct all complaints to the cauldron.`,
-	(title) => '🕯️ The scales were perfectly balanced... until I gave them a little nudge. {title} emerges victorious!',
+	(title) => `🕯️ The scales were perfectly balanced... until I gave them a little nudge. ${title} emerges victorious!`,
 ];
 
 const noPollWinnerMessages = [

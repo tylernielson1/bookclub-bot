@@ -1,7 +1,6 @@
-const { MessageFlags, SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 const OpenLibraryClient = require('../../api/OpenLibraryClient');
 const FamiliarMessages = require('../../utils/FamiliarMessages');
-const BookPollView = require('../../ui/BookPollView');
 
 async function resolveBook(input) {
 	const parsed = await parseBookInput(input);

@@ -1,10 +1,11 @@
 const { Client, Collection, Events, GatewayIntentBits, MessageFlags } = require('discord.js');
 const { handleComponent } = require('./src/interactions/componentHandler');
-const env = require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
 const SessionManager = require('./src/sessions/SessionManager');
 const BookPollService = require('./src/services/BookPollService');
+
+require('dotenv').config();
 
 // Create new client
 const client = new Client({
