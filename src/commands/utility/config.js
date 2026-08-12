@@ -3,10 +3,10 @@ const { guildConfigManager } = require('../../db');
 
 module.exports = {
 	data: new SlashCommandBuilder()
-		.setName('config')
-		.setDescription('Pong!')
+		.setName('configure')
+		.setDescription('Allows for server administrators to edit current guild configurations.')
 		.setDefaultMemberPermissions(0),
-    requiresRegistration: true,
+	requiresRegistration: true,
 	async execute(interaction) {
 		interaction.reply('Pong!');
 	},

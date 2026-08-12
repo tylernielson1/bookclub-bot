@@ -61,7 +61,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 		if (interaction.isChatInputCommand()) {
 			if (!interaction.guildId) {
 				await interaction.reply({
-					content: 'I am not available for use in DMs just yet.'
+					content: 'I am not available for use in DMs just yet.',
 				});
 				return;
 			}
@@ -119,10 +119,11 @@ client.on(Events.GuildDelete, async (guild) => {
 
 	try {
 		guildConfigManager.unregisterGuild(guild.id);
-	} catch (error) {
+	}
+	catch (error) {
 		console.error(`Failed to unregister guild ${guild.id}:`, error);
 	}
-})
+});
 
 async function start() {
 	await connectCache();

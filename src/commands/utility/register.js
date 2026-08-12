@@ -13,23 +13,24 @@ module.exports = {
 		if (guildConfigManager.isRegistered(guildId)) {
 			return await interaction.reply({
 				content: 'This server is already registered.',
-				flags: MessageFlags.Ephemeral
+				flags: MessageFlags.Ephemeral,
 			});
 		}
 
 		try {
 			guildConfigManager.registerGuild(guildId);
-		} catch (error) {
+		}
+		catch (error) {
 			console.error(`Error registering server with gulid id: ${guildId}\n`, error);
 			return await interaction.reply({
 				content: 'Failed to register server. Please try again.',
-				flags: MessageFlags.Ephemeral
-			})
+				flags: MessageFlags.Ephemeral,
+			});
 		}
 
 		return await interaction.reply({
 			content: 'Successfully registered server.',
-			flags: MessageFlags.Ephemeral
+			flags: MessageFlags.Ephemeral,
 		});
 	},
 };

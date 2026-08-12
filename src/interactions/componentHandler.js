@@ -12,7 +12,8 @@ async function handleComponent(interaction) {
 		}
 
 		return handleBookSearchComponent(interaction);
-	} catch (error) {
+	}
+	catch (error) {
 		console.error('Component handler error:', error);
 
 		if (!interaction.replied) {
@@ -62,7 +63,7 @@ async function handleBookSearchComponent(interaction) {
 			BookSearchView.render(session),
 		);
 
-	case 'books_select':
+	case 'books_select': {
 		const index = Number(
 			interaction.values[0],
 		);
@@ -84,6 +85,7 @@ async function handleBookSearchComponent(interaction) {
 		return interaction.update(
 			await BookDetailView.render(details),
 		);
+	}
 
 	case 'books_back':
 		session.selectedBook = null;
@@ -106,7 +108,7 @@ async function handleSetupComponent(interaction) {
 		throw new Error('SetupService has not been initialized.');
 	}
 
-	switch(interaction.customId) {
+	switch (interaction.customId) {
 	case 'setup_announcement_channel': {
 		const channelId = interaction.values[0];
 
@@ -114,7 +116,7 @@ async function handleSetupComponent(interaction) {
 
 		const response = await setupService.setAnnouncementChannel(
 			interaction.guildId,
-			channelId
+			channelId,
 		);
 
 		return interaction.editReply(response);
@@ -128,13 +130,13 @@ async function handleSetupComponent(interaction) {
 
 		const response = await setupService.setDiscussionChannel(
 			interaction.guildId,
-			channelId
+			channelId,
 		);
 
 		return interaction.editReply(response);
 	}
-		
-	
+
+
 	case 'setup_poll_duration': {
 		const duration = interaction.values[0];
 
@@ -142,7 +144,7 @@ async function handleSetupComponent(interaction) {
 
 		const response = await setupService.setPollDuration(
 			interaction.guildId,
-			duration
+			duration,
 		);
 
 		return interaction.editReply(response);
@@ -152,11 +154,11 @@ async function handleSetupComponent(interaction) {
 		await interaction.deferUpdate();
 
 		await setupService.confirm(interaction.guildId);
-		
+
 		return interaction.editReply({
 			content: '✅ **Book Club setup complete!**\n\n' +
 				'Your server is now configured and ready to use the bot.',
-			components: []
+			components: [],
 		});
 	}
 
@@ -165,14 +167,14 @@ async function handleSetupComponent(interaction) {
 
 		return interaction.update({
 			content: '❌ **Setup cancelled.**',
-			components: []
+			components: [],
 		});
 	}
 
 	case 'setup_back_announcement': {
 		const response = setupService.back(
 			interaction.guildId,
-			'announcement'
+			'announcement',
 		);
 
 		return interaction.update(response);
@@ -181,7 +183,7 @@ async function handleSetupComponent(interaction) {
 	case 'setup_back_discussion': {
 		const response = setupService.back(
 			interaction.guildId,
-			'discussion'
+			'discussion',
 		);
 
 		return interaction.update(response);
@@ -190,7 +192,7 @@ async function handleSetupComponent(interaction) {
 	case 'setup_back_duration': {
 		const response = setupService.back(
 			interaction.guildId,
-			'duration'
+			'duration',
 		);
 
 		return interaction.update(response);

@@ -14,5 +14,5 @@ guildConfigManager.initialize();
 
 module.exports = {
 	pollManager,
-    guildConfigManager
+	guildConfigManager,
 };

@@ -1,5 +1,4 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { guildConfigManager } = require('../../db');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -8,6 +7,6 @@ module.exports = {
 		.setDefaultMemberPermissions(0),
 	requiresRegistration: false,
 	async execute(interaction) {
-		interaction.reply('Pong!');
+		interaction.reply('I\'m here to help!');
 	},
 };

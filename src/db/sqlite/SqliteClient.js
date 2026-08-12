@@ -22,14 +22,14 @@ class SQLiteClient {
 	}
 
 	initialize() {
-        this.db.exec(`
+		this.db.exec(`
             CREATE TABLE IF NOT EXISTS registered_guilds (
                 guild_id TEXT PRIMARY KEY,
                 registered_at INTEGER NOT NULL DEFAULT (unixepoch())
             );
         `);
 
-        this.db.exec(`
+		this.db.exec(`
             CREATE TABLE IF NOT EXISTS guild_config (
                 guild_id TEXT PRIMARY KEY,
                 announcement_channel_id TEXT,
