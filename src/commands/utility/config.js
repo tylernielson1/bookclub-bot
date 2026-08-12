@@ -12,7 +12,7 @@ module.exports = {
 		if (!configureService) {
 			await interaction.reply({
 				content: 'The ConfigureService did not start correctly.',
-				flags: MessageFlags.Ephemeral
+				flags: MessageFlags.Ephemeral,
 			});
 
 			return;
@@ -23,7 +23,7 @@ module.exports = {
 
 		await interaction.reply({
 			...response,
-			flags: MessageFlags.Ephemeral
+			flags: MessageFlags.Ephemeral,
 		});
 	},
 };

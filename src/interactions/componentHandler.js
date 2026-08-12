@@ -4,7 +4,6 @@ const BookDetailView = require('../ui/BookDetailView');
 const FamiliarMessages = require('../utils/FamiliarMessages');
 const { openLibraryClient } = require('../api');
 const { sessionManager } = require('../cache');
-const config = require('../commands/utility/config');
 
 async function handleComponent(interaction) {
 	try {
@@ -103,6 +102,7 @@ async function handleBookSearchComponent(interaction) {
 
 	default:
 		console.warn(`Unknown component: ${interaction.customId}`);
+		return;
 	}
 }
 
@@ -205,6 +205,7 @@ async function handleSetupComponent(interaction) {
 
 	default:
 		console.warn(`Unknown setup component: ${interaction.customId}`);
+		return;
 	}
 }
 
@@ -219,7 +220,7 @@ async function handleConfigComponent(interaction) {
 
 	switch (interaction.customId) {
 	case 'config_setting_selection': {
-		switch(interaction.values[0]) {
+		switch (interaction.values[0]) {
 		case 'announcement': {
 			const response = configureService.buildAnnouncementChannelConfigSummary(config.announcementChannelId);
 
@@ -240,6 +241,7 @@ async function handleConfigComponent(interaction) {
 
 		default:
 			console.warn(`Unknown configure component: ${interaction.customId}`);
+			return;
 		}
 	}
 
@@ -259,7 +261,7 @@ async function handleConfigComponent(interaction) {
 	case 'config_clear_announcement': {
 		await interaction.deferUpdate();
 
-		await configureService.clearSetting(interaction.guildId, 'announcementChannelId')
+		await configureService.clearSetting(interaction.guildId, 'announcementChannelId');
 
 		config = configureService.getConfig(interaction.guildId);
 
@@ -271,7 +273,7 @@ async function handleConfigComponent(interaction) {
 	case 'config_clear_discussion': {
 		await interaction.deferUpdate();
 
-		await configureService.clearSetting(interaction.guildId, 'discussionChannelId')
+		await configureService.clearSetting(interaction.guildId, 'discussionChannelId');
 
 		config = configureService.getConfig(interaction.guildId);
 
@@ -324,6 +326,7 @@ async function handleConfigComponent(interaction) {
 
 	default:
 		console.warn(`Unknown config component: ${interaction.customId}`);
+		return;
 	}
 }
 
