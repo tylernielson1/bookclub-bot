@@ -23,6 +23,25 @@ class SQLiteClient {
 
 	initialize() {
 		this.db.exec(`
+            CREATE TABLE IF NOT EXISTS registered_guilds (
+                guild_id TEXT PRIMARY KEY,
+                registered_at INTEGER NOT NULL DEFAULT (unixepoch())
+            );
+        `);
+
+		this.db.exec(`
+            CREATE TABLE IF NOT EXISTS guild_config (
+                guild_id TEXT PRIMARY KEY,
+                announcement_channel_id TEXT,
+                discussion_channel_id TEXT,
+                poll_duration INTEGER,
+                created_at INTEGER NOT NULL DEFAULT(unixepoch()),
+                updated_at INTEGER NOT NULL DEFAULT(unixepoch()),
+                FOREIGN KEY(guild_id) REFERENCES registered_guilds(guild_id)
+            );
+        `);
+
+		this.db.exec(`
             CREATE TABLE IF NOT EXISTS polls (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 message_id TEXT NOT NULL UNIQUE,

@@ -2,11 +2,11 @@ const { SlashCommandBuilder } = require('discord.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
-		.setName('ping')
-		.setDescription('Pong!')
+		.setName('help')
+		.setDescription('Prints out a helpful guide about what I can do!')
 		.setDefaultMemberPermissions(0),
 	requiresRegistration: false,
 	async execute(interaction) {
-		interaction.reply('Pong!');
+		interaction.reply('I\'m here to help!');
 	},
 };
