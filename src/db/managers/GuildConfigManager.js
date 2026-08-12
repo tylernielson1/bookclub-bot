@@ -92,6 +92,29 @@ class GuildConfigManager {
 		);
 	}
 
+	editConfig(guildId, key, value) {
+		const fields = {
+			announcementChannelId: 'announcement_channel_id',
+			discussionChannelId: 'discussion_channel_id',
+			pollDuration: 'poll_duration',
+		};
+
+		const column = fields[key];
+
+		if (!column) {
+			throw new Error(`Unknown config key: ${key}`);
+		}
+
+		return this.db.run(
+			`
+			UPDATE guild_config
+			SET ${column} = ?
+			WHERE guild_id = ?
+			`,
+			[value, guildId],
+		);
+	}
+
 	clearConfig(guildId, key) {
 		const fields = {
 			announcementChannelId: 'announcement_channel_id',

@@ -4,11 +4,16 @@ const BookDetailView = require('../ui/BookDetailView');
 const FamiliarMessages = require('../utils/FamiliarMessages');
 const { openLibraryClient } = require('../api');
 const { sessionManager } = require('../cache');
+const config = require('../commands/utility/config');
 
 async function handleComponent(interaction) {
 	try {
 		if (interaction.customId.startsWith('setup_')) {
 			return handleSetupComponent(interaction);
+		}
+
+		if (interaction.customId.startsWith('config_')) {
+			return handleConfigComponent(interaction);
 		}
 
 		return handleBookSearchComponent(interaction);
@@ -124,7 +129,7 @@ async function handleSetupComponent(interaction) {
 
 
 	case 'setup_discussion_channel': {
-		const channelId = interaction. values[0];
+		const channelId = interaction.values[0];
 
 		await interaction.deferUpdate();
 
@@ -200,6 +205,125 @@ async function handleSetupComponent(interaction) {
 
 	default:
 		console.warn(`Unknown setup component: ${interaction.customId}`);
+	}
+}
+
+async function handleConfigComponent(interaction) {
+	const configureService = interaction.client.configureService;
+
+	if (!configureService) {
+		throw new Error('ConfigureService has not been initialized.');
+	}
+
+	let config = configureService.getConfig(interaction.guildId);
+
+	switch (interaction.customId) {
+	case 'config_setting_selection': {
+		switch(interaction.values[0]) {
+		case 'announcement': {
+			const response = configureService.buildAnnouncementChannelConfigSummary(config.announcementChannelId);
+
+			return interaction.update(response);
+		}
+
+		case 'discussion': {
+			const response = configureService.buildDiscussionChannelConfigSummary(config.discussionChannelId);
+
+			return interaction.update(response);
+		}
+
+		case 'pollduration': {
+			const response = configureService.buildPollDurationConfigSummary(config.pollDuration);
+
+			return interaction.update(response);
+		}
+
+		default:
+			console.warn(`Unknown configure component: ${interaction.customId}`);
+		}
+	}
+
+	case 'config_back': {
+		const response = configureService.buildCurrentConfigMenu(config);
+
+		return interaction.update(response);
+	}
+
+	case 'config_close': {
+		return interaction.update({
+			content: '**Config closed.**',
+			components: [],
+		});
+	}
+
+	case 'config_clear_announcement': {
+		await interaction.deferUpdate();
+
+		await configureService.clearSetting(interaction.guildId, 'announcementChannelId')
+
+		config = configureService.getConfig(interaction.guildId);
+
+		const response = configureService.buildCurrentConfigMenu(config);
+
+		return interaction.update(response);
+	}
+
+	case 'config_clear_discussion': {
+		await interaction.deferUpdate();
+
+		await configureService.clearSetting(interaction.guildId, 'discussionChannelId')
+
+		config = configureService.getConfig(interaction.guildId);
+
+		const response = configureService.buildCurrentConfigMenu(config);
+
+		return interaction.update(response);
+	}
+
+	case 'config_announcement_channel': {
+		const channelId = interaction.values[0];
+
+		await interaction.deferUpdate();
+
+		await configureService.setAnnouncementChannel(interaction.guildId, channelId);
+
+		config = configureService.getConfig(interaction.guildId);
+
+		const response = configureService.buildAnnouncementChannelConfigSummary(config.announcementChannelId);
+
+		return interaction.editReply(response);
+	}
+
+	case 'config_discussion_channel': {
+		const channelId = interaction.values[0];
+
+		await interaction.deferUpdate();
+
+		await configureService.setDiscussionChannel(interaction.guildId, channelId);
+
+		config = configureService.getConfig(interaction.guildId);
+
+		const response = configureService.buildDiscussionChannelConfigSummary(config.discussionChannelId);
+
+		return interaction.editReply(response);
+	}
+
+	case 'config_poll_duration': {
+		const duration = interaction.values[0];
+
+		await interaction.deferUpdate();
+
+		await configureService.setPollDuration(interaction.guildId, duration);
+
+		config = configureService.getConfig(interaction.guildId);
+
+		const response = configureService.buildPollDurationConfigSummary(config.discussionChannelId);
+
+		return interaction.editReply(response);
+	}
+
+	default:
+		console.warn(`Unknown config component: ${interaction.customId}`);
 	}
 }
 
