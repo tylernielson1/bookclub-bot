@@ -15,6 +15,7 @@ module.exports = {
 				).setRequired(true),
 		)
 		.setDefaultMemberPermissions(0),
+	requiresRegistration: true,
 	async execute(interaction) {
 		await interaction.deferReply({
 			flags: MessageFlags.Ephemeral,

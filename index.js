@@ -3,8 +3,9 @@ const { handleComponent } = require('./src/interactions/componentHandler');
 const fs = require('node:fs');
 const path = require('node:path');
 const BookPollService = require('./src/services/BookPollService');
+const SetupService = require('./src/services/SetupService');
 const { connectCache } = require('./src/cache');
-const { pollManager } = require('./src/db');
+const { pollManager, guildConfigManager } = require('./src/db');
 
 require('dotenv').config();
 
@@ -18,6 +19,10 @@ const client = new Client({
 
 client.once(Events.ClientReady, (readyClient) => {
 	console.log(`Ready! Logged in as ${readyClient.user.tag}`);
+
+	const setupService = new SetupService(guildConfigManager);
+
+	client.setupService = setupService;
 
 	const bookPollService = new BookPollService(client, pollManager, {
 		pollDuration: 168,
@@ -54,10 +59,26 @@ for (const folder of commandFolders) {
 client.on(Events.InteractionCreate, async (interaction) => {
 	try {
 		if (interaction.isChatInputCommand()) {
+			if (!interaction.guildId) {
+				await interaction.reply({
+					content: 'I am not available for use in DMs just yet.'
+				});
+				return;
+			}
+
 			const command = interaction.client.commands.get(interaction.commandName);
 
 			if (!command) {
 				console.error(`No command matching ${interaction.commandName} was found.`);
+				return;
+			}
+
+			if (command.requiresRegistration && !guildConfigManager.isRegistered(interaction.guildId)) {
+				await interaction.reply({
+					content: 'This server is not registered with the bot.',
+					flags: MessageFlags.Ephemeral,
+				});
+
 				return;
 			}
 
@@ -66,7 +87,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 			return;
 		}
 
-		if (interaction.isButton() || interaction.isStringSelectMenu()) {
+		if (interaction.isMessageComponent()) {
 			await handleComponent(interaction);
 
 			return;
@@ -88,6 +109,20 @@ client.on(Events.InteractionCreate, async (interaction) => {
 		}
 	}
 });
+
+client.on(Events.GuildCreate, async (guild) => {
+	console.log(`I have joined a new guild with id: ${guild.id}`);
+});
+
+client.on(Events.GuildDelete, async (guild) => {
+	console.log(`I have left the guild with id ${guild.id}`);
+
+	try {
+		guildConfigManager.unregisterGuild(guild.id);
+	} catch (error) {
+		console.error(`Failed to unregister guild ${guild.id}:`, error);
+	}
+})
 
 async function start() {
 	await connectCache();

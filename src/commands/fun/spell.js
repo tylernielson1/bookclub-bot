@@ -15,6 +15,7 @@ module.exports = {
 					{ name: 'Chaos', value: 'chaos' },
 				),
 		),
+	requiresRegistration: true,
 	async execute(interaction) {
 		const target = interaction.options.getString('target');
 		const type = interaction.options.getString('type');

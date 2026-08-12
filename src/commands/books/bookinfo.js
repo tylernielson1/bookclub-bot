@@ -98,6 +98,7 @@ module.exports = {
 		.addStringOption((option) => option.setName('title').setDescription('The title of the book'))
 		.addStringOption((option) => option.setName('author').setDescription('Author of the book'))
 		.addStringOption((option) => option.setName('isbn').setDescription('ISBN of the book')),
+	requiresRegistration: true,
 	async execute(interaction) {
 		const title = interaction.options.getString('title');
 		const author = interaction.options.getString('author');

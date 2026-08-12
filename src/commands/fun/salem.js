@@ -14,6 +14,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('salem')
 		.setDescription('Broadcasts a random Salem quote to the server.'),
+	requiresRegistration: true,
 	async execute(interaction) {
 		const attachment = new AttachmentBuilder(getRandomPhotoPath());
 
