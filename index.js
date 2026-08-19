@@ -3,6 +3,7 @@ const { handleComponent } = require('./src/interactions/componentHandler');
 const fs = require('node:fs');
 const path = require('node:path');
 const BookPollService = require('./src/services/BookPollService');
+const ConfigureService = require('./src/services/ConfigureService');
 const SetupService = require('./src/services/SetupService');
 const { connectCache } = require('./src/cache');
 const { pollManager, guildConfigManager } = require('./src/db');
@@ -23,6 +24,10 @@ client.once(Events.ClientReady, (readyClient) => {
 	const setupService = new SetupService(guildConfigManager);
 
 	client.setupService = setupService;
+
+	const configureService = new ConfigureService(guildConfigManager);
+
+	client.configureService = configureService;
 
 	const bookPollService = new BookPollService(client, pollManager, {
 		pollDuration: 168,

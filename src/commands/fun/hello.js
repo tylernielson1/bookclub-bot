@@ -8,7 +8,7 @@ module.exports = {
 	requiresRegistration: false,
 	async execute(interaction) {
 		const name = interaction.options.getString('name');
-		if (!name) await interaction.reply('Meow meow bitches, Salem is in the house');
-		else await interaction.reply(`Meow meow ${name}, Salem here. Feed me.`);
+		if (!name) await interaction.reply('Hello, darlings. The witching hour has begun.');
+		else await interaction.reply(`Ahem… hello ${name}. I've been summoned.`);
 	},
 };
