@@ -2,7 +2,7 @@ const BookPollView = require('../ui/BookPollView');
 const FamiliarMessages = require('../utils/FamiliarMessages');
 
 class BookPollService {
-	constructor(client, pollManager, guildConfigManager, options = {}) {
+	constructor(client, pollManager, guildConfigManager) {
 		this.client = client;
 		this.pollManager = pollManager;
 		this.guildConfigManager = guildConfigManager;
