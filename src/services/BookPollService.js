@@ -2,12 +2,10 @@ const BookPollView = require('../ui/BookPollView');
 const FamiliarMessages = require('../utils/FamiliarMessages');
 
 class BookPollService {
-	constructor(client, pollManager, options = {}) {
+	constructor(client, pollManager, guildConfigManager) {
 		this.client = client;
 		this.pollManager = pollManager;
-		this.pollDuration = options.pollDuration ?? 168;
-		this.announcementChannelId = options.announcementChannelId ?? null;
-		this.discussionChannelId = options.discussionChannelId ?? null;
+		this.guildConfigManager = guildConfigManager;
 	}
 
 	async createPoll(channel, books, pollName) {
@@ -15,9 +13,15 @@ class BookPollService {
 			throw new Error('A book poll requires exactly three books.');
 		}
 
+		const config = this.guildConfigManager.mapRowToGuildConfig(await this.guildConfigManager.getGuildConfig(channel.guildId));
+
+		if (!config) {
+			throw new Error('Book polls have not been configured for this server.');
+		}
+
 		const pollMessage = await channel.send(
 			BookPollView.render(books, pollName, {
-				duration: this.pollDuration,
+				duration: config.pollDuration,
 			}),
 		);
 
@@ -36,8 +40,8 @@ class BookPollService {
 			channelId: channel.id,
 			guildId: channel.guildId,
 			books: books,
-			announcementChannelId: this.announcementChannelId,
-			discussionChannelId: this.discussionChannelId,
+			announcementChannelId: config.announcementChannelId,
+			discussionChannelId: config.discussionChannelId,
 			expiresAt: pollMessage.poll.expiresAt.getTime(),
 		});
 

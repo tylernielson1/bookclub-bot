@@ -29,11 +29,7 @@ client.once(Events.ClientReady, (readyClient) => {
 
 	client.configureService = configureService;
 
-	const bookPollService = new BookPollService(client, pollManager, {
-		pollDuration: 168,
-		announcementChannelId: process.env.ANNOUNCEMENT_CHANNEL_ID,
-		discussionChannelId: process.env.DISCUSSION_CHANNEL_ID,
-	});
+	const bookPollService = new BookPollService(client, pollManager, guildConfigManager);
 
 	client.bookPollService = bookPollService;
 
