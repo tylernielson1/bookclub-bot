@@ -341,25 +341,25 @@ async function handleHelpComponent(interaction) {
 
 	const commands = [...interaction.client.commands.values()].filter(command => !command.hidden);
 	let newIndex = currentIndex;
-	
-	switch(action) {
-		case 'help_prev':
-			newIndex--;
-			break;
-		case 'help_next':
-			newIndex++;
-			break;
-		case 'help_close': {
-			await interaction.update({
-				content: 'Help menu closed.',
-				embeds: [],
-				components: [],
-			});
-			return;
-		}
-		default:
-			console.warn(`Unknown config component: ${interaction.customId}`);
-			return;
+
+	switch (action) {
+	case 'help_prev':
+		newIndex--;
+		break;
+	case 'help_next':
+		newIndex++;
+		break;
+	case 'help_close': {
+		await interaction.update({
+			content: 'Help menu closed.',
+			embeds: [],
+			components: [],
+		});
+		return;
+	}
+	default:
+		console.warn(`Unknown config component: ${interaction.customId}`);
+		return;
 	}
 
 	const command = commands[newIndex];

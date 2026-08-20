@@ -13,7 +13,7 @@ module.exports = {
 
 		await interaction.reply({
 			...view,
-			flags: MessageFlags.Ephemeral
+			flags: MessageFlags.Ephemeral,
 		});
 	},
 };
