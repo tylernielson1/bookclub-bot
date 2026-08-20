@@ -94,9 +94,9 @@ async function reply(interaction, view) {
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('bookinfo')
-		.setDescription('Gets information about the provided book.')
+		.setDescription('Gets information using the provided book search criteria. Requires either title or ISBN.')
 		.addStringOption((option) => option.setName('title').setDescription('The title of the book'))
-		.addStringOption((option) => option.setName('author').setDescription('Author of the book'))
+		.addStringOption((option) => option.setName('author').setDescription('The author of the book'))
 		.addStringOption((option) => option.setName('isbn').setDescription('ISBN of the book')),
 	requiresRegistration: true,
 	async execute(interaction) {

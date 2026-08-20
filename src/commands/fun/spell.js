@@ -5,7 +5,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('spell')
 		.setDescription('Command the familiar to cast a spell for you.')
-		.addStringOption((option) => option.setName('target').setDescription('Mark another witch as the target of your spell.'))
+		.addStringOption((option) => option.setName('target').setDescription('Mark another coven member as the target of your spell.'))
 		.addStringOption((option) =>
 			option.setName('type')
 				.setDescription('The type of spell to cast.')
