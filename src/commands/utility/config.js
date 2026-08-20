@@ -6,6 +6,7 @@ module.exports = {
 		.setDescription('Allows for server administrators to edit current guild configurations.')
 		.setDefaultMemberPermissions(0),
 	requiresRegistration: true,
+	hidden: true,
 	async execute(interaction) {
 		const configureService = interaction.client.configureService;
 

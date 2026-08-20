@@ -6,6 +6,7 @@ module.exports = {
 		.setDescription('Configure the Book Club bot for this server.')
 		.setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 	requiresRegistration: true,
+	hidden: true,
 	async execute(interaction) {
 		const setupService = interaction.client.setupService;
 

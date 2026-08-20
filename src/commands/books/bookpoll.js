@@ -53,11 +53,11 @@ function parseBookInput(input) {
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('bookpoll')
-		.setDescription('Creates a poll using the three provided books.')
+		.setDescription('Creates a poll using the three provided books. The book can be identified by ISBN or Title | Author')
 		.addStringOption((option) => option.setName('pollname').setDescription('The name of the poll').setRequired(true))
-		.addStringOption((option) => option.setName('book1').setDescription('ISBN or Title | Author').setRequired(true))
-		.addStringOption((option) => option.setName('book2').setDescription('ISBN or Title | Author').setRequired(true))
-		.addStringOption((option) => option.setName('book3').setDescription('ISBN or Title | Author').setRequired(true)),
+		.addStringOption((option) => option.setName('book1').setDescription('ISBN OR Title and Author, separated by |').setRequired(true))
+		.addStringOption((option) => option.setName('book2').setDescription('ISBN OR Title and Author, separated by |').setRequired(true))
+		.addStringOption((option) => option.setName('book3').setDescription('ISBN OR Title and Author, separated by |').setRequired(true)),
 	requiresRegistration: true,
 	async execute(interaction) {
 		const inputs = [

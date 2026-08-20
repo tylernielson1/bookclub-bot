@@ -4,7 +4,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('hello')
 		.setDescription('Says hello in a Salem-coded fashion.')
-		.addStringOption((option) => option.setName('name').setDescription('The name to say hello to')),
+		.addStringOption((option) => option.setName('name').setDescription('The name of the person for the familiar to greet.')),
 	requiresRegistration: false,
 	async execute(interaction) {
 		const name = interaction.options.getString('name');
