@@ -2,6 +2,7 @@ const { MessageFlags } = require('discord.js');
 const BookSearchView = require('../ui/BookSearchView');
 const BookDetailView = require('../ui/BookDetailView');
 const FamiliarMessages = require('../utils/FamiliarMessages');
+const HelpView = require('../ui/HelpView');
 const { openLibraryClient } = require('../api');
 const { sessionManager } = require('../cache');
 
@@ -13,6 +14,10 @@ async function handleComponent(interaction) {
 
 		if (interaction.customId.startsWith('config_')) {
 			return handleConfigComponent(interaction);
+		}
+
+		if (interaction.customId.startsWith('help_')) {
+			return handleHelpComponent(interaction);
 		}
 
 		return handleBookSearchComponent(interaction);
@@ -328,6 +333,40 @@ async function handleConfigComponent(interaction) {
 		console.warn(`Unknown config component: ${interaction.customId}`);
 		return;
 	}
+}
+
+async function handleHelpComponent(interaction) {
+	const [action, index] = interaction.customId.split(':');
+	const currentIndex = Number(index);
+
+	const commands = [...interaction.client.commands.values()].filter(command => !command.hidden);
+	let newIndex = currentIndex;
+	
+	switch(action) {
+		case 'help_prev':
+			newIndex--;
+			break;
+		case 'help_next':
+			newIndex++;
+			break;
+		case 'help_close': {
+			await interaction.update({
+				content: 'Help menu closed.',
+				embeds: [],
+				components: [],
+			});
+			return;
+		}
+		default:
+			console.warn(`Unknown config component: ${interaction.customId}`);
+			return;
+	}
+
+	const command = commands[newIndex];
+
+	const view = HelpView.render(command.data, newIndex, commands.length);
+
+	await interaction.update(view);
 }
 
 module.exports = {

@@ -6,6 +6,7 @@ module.exports = {
 		.setDescription('Pong!')
 		.setDefaultMemberPermissions(0),
 	requiresRegistration: false,
+	hidden: true,
 	async execute(interaction) {
 		interaction.reply('Pong!');
 	},

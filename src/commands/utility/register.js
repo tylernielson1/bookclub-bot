@@ -7,6 +7,7 @@ module.exports = {
 		.setDescription('Registers the server with the bot, enabling core functionality.')
 		.setDefaultMemberPermissions(0),
 	requiresRegistration: false,
+	hidden: true,
 	async execute(interaction) {
 		const guildId = interaction.guildId;
 
