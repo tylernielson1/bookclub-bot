@@ -59,6 +59,34 @@ class SQLiteClient {
                 processed_at INTEGER
             );
         `);
+
+		this.db.exec(`
+			CREATE TABLE IF NOT EXISTS events (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				guild_id TEXT NOT NULL,
+				channel_id TEXT NOT NULL,
+				message_id TEXT,
+				creator_id TEXT NOT NULL,
+				name TEXT NOT NULL,
+				location TEXT NOT NULL,
+				start_time INTEGER NOT NULL,
+				reminder_at INTEGER NOT NULL,
+				reminder_sent INTEGER DEFAULT 0,
+				cancelled INTEGER DEFAULT 0,
+				status TEXT NOT NULL,
+				created_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000)
+			);
+		`);
+
+		this.db.exec(`
+			CREATE TABLE IF NOT EXISTS event_rsvps (
+				event_id INTEGER NOT NULL,
+				user_id TEXT NOT NULL,
+				created_at INTEGER NOT NULL DEFAULT(unixepoch() * 1000),
+				PRIMARY KEY (event_id, user_id),
+				FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
+			);
+		`);
 	}
 
 	run(sql, params = []) {
