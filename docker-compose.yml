@@ -1,0 +1,22 @@
+services:
+  bot:
+    container_name: bookclub-bot
+    image: bookclub-bot
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    volumes:
+      - ./data:/app/data
+  
+  redis:
+    container_name: bookclub-redis
+    image: redis:8-alpine
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    
+volumes:
+  redis-data:
