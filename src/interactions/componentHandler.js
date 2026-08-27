@@ -1,10 +1,14 @@
 const { MessageFlags } = require('discord.js');
 const BookSearchView = require('../ui/BookSearchView');
 const BookDetailView = require('../ui/BookDetailView');
+const EventView = require('../ui/EventView');
+const EventEditView = require('../ui/EventEditView');
 const FamiliarMessages = require('../utils/FamiliarMessages');
 const HelpView = require('../ui/HelpView');
 const { openLibraryClient } = require('../api');
 const { sessionManager } = require('../cache');
+const { parseDate, parseTime } = require('../utils/utils');
+const { DateTime } = require('luxon');
 
 async function handleComponent(interaction) {
 	try {
@@ -18,6 +22,14 @@ async function handleComponent(interaction) {
 
 		if (interaction.customId.startsWith('help_')) {
 			return handleHelpComponent(interaction);
+		}
+
+		if (interaction.customId.startsWith('event_')) {
+			return handleEventComponent(interaction);
+		}
+
+		if (interaction.customId.startsWith('eventEdit_')) {
+			return handleEventEditComponent(interaction);
 		}
 
 		return handleBookSearchComponent(interaction);
@@ -367,6 +379,208 @@ async function handleHelpComponent(interaction) {
 	const view = HelpView.render(command.data, newIndex, commands.length);
 
 	await interaction.update(view);
+}
+
+async function handleEventComponent(interaction) {
+	const [action, eventId] = interaction.customId.split(':');
+
+	const eventService = interaction.client.eventService;
+
+	if (!eventService) {
+		throw new Error('EventService has not been initialized.');
+	}
+
+	switch (action) {
+	case 'event_rsvp': {
+		await interaction.deferUpdate();
+		const event = eventService.rsvp(eventId, interaction.user.id);
+		await refreshEventMessage(interaction.client, event);
+		return;
+	}
+
+	case 'event_unrsvp': {
+		await interaction.deferUpdate();
+		const event = eventService.unRsvp(eventId, interaction.user.id);
+		await refreshEventMessage(interaction.client, event);
+		return;
+	}
+
+	case 'event_attendees': {
+		const event = eventService.getEvent(eventId);
+
+		console.log(event.rsvps);
+
+		const mentions = event.rsvps.map((attendee) => {
+			return `<@${attendee.userId}>`;
+		}).join('\n');
+
+		console.log(mentions);
+
+		return interaction.reply(EventView.renderAttendees(event.name, mentions));
+	}
+
+	default: {
+		console.warn(`Unknown config component: ${interaction.customId}`);
+		return;
+	}
+	}
+}
+
+async function handleEventEditComponent(interaction) {
+	const [action, field, eventId] = interaction.customId.split(':');
+	const eventService = interaction.client.eventService;
+
+	if (!eventService) {
+		throw new Error('EventService has not been initialized.');
+	}
+
+	switch (action) {
+	case 'eventEdit_': {
+		const event = eventService.getEvent(eventId);
+
+		if (!event) {
+			return interaction.reply({
+				content: 'That event could not be found.',
+				flags: MessageFlags.Ephemeral,
+			});
+		}
+
+		return interaction.showModal(
+			EventEditView.buildEditModal(field, event),
+		);
+	}
+	case 'eventEdit_modal': {
+		return handleEventEditModalComponent(interaction);
+	}
+	case 'eventEdit_done':
+		return interaction.update({
+			content: 'Event editing closed.',
+			embeds: [],
+			components: [],
+		});
+	default:
+		console.warn(`Unknown config component: ${interaction.customId}`);
+		return;
+	}
+}
+
+async function handleEventEditModalComponent(interaction) {
+	const [, field, eventId] = interaction.customId.split(':');
+
+	const eventService = interaction.client.eventService;
+
+	if (!eventService) {
+		throw new Error('EventService has not been initialized.');
+	}
+
+	const value = interaction.fields.getTextInputValue('value');
+	const event = eventService.getEvent(eventId);
+
+	try {
+		let data;
+
+		switch (field) {
+		case 'name':
+			data = {
+				name: value.trim(),
+			};
+			break;
+
+		case 'location':
+			data = {
+				location: value.trim(),
+			};
+			break;
+
+		case 'date':
+			data = parseStartDateChange(value, event, 3);
+			break;
+
+		case 'time':
+			data = parseStartTimeChange(value, event, 3);
+			break;
+
+		default:
+			throw new Error(`Unknown edit field: ${field}`);
+		}
+
+		const updatedEvent = await eventService.editEvent(eventId, data);
+
+		await refreshEventMessage(interaction.client, updatedEvent);
+
+		return interaction.reply({
+			content: 'Event updated successfully.',
+			flags: MessageFlags.Ephemeral,
+		});
+	}
+	catch (error) {
+		console.error('Error editing event:', error);
+
+		return interaction.editReply({
+			content: FamiliarMessages.apiUnavailable(),
+			flags: MessageFlags.Ephemeral,
+		});
+	}
+}
+
+function parseStartDateChange(value, event, offset) {
+	const newDate = parseDate(value);
+	const time = DateTime.fromSeconds(event.startTime, {
+		zone: 'America/Chicago',
+	});
+
+	const startTime = DateTime.fromObject({
+		year: newDate.year,
+		month: newDate.month,
+		day: newDate.day,
+		hour: time.hour,
+		minute: time.minute,
+	}, {
+		zone: 'America/Chicago',
+		locale: 'en-US',
+	});
+
+	const reminderTime = startTime.minus({
+		hours: offset,
+	});
+
+	return {
+		startTime: startTime.toMillis(),
+		reminderAt: reminderTime.toMillis(),
+	};
+}
+
+function parseStartTimeChange(value, event, offset) {
+	const date = DateTime.fromSeconds(event.startTime, {
+		zone: 'America/Chicago',
+	});
+	const newTime = parseTime(value);
+
+	const startTime = DateTime.fromObject({
+		year: date.year,
+		month: date.month,
+		day: date.day,
+		hour: newTime.hour,
+		minute: newTime.minute,
+	}, {
+		zone: 'America/Chicago',
+		locale: 'en-US',
+	});
+
+	const reminderTime = startTime.minus({ hours: offset });
+
+	return {
+		startTime: startTime.toMillis(),
+		reminderAt: reminderTime.toMillis(),
+	};
+}
+
+async function refreshEventMessage(client, event) {
+	const channel = await client.channels.fetch(event.channelId);
+	const message = await channel.messages.fetch(event.messageId);
+	return message.edit(
+		EventView.render(event, event.rsvps.length),
+	);
 }
 
 module.exports = {

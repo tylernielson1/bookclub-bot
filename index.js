@@ -4,9 +4,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const BookPollService = require('./src/services/BookPollService');
 const ConfigureService = require('./src/services/ConfigureService');
+const EventService = require('./src/services/EventService');
 const SetupService = require('./src/services/SetupService');
 const { connectCache } = require('./src/cache');
-const { pollManager, guildConfigManager } = require('./src/db');
+const { pollManager, guildConfigManager, eventManager } = require('./src/db');
 
 require('dotenv').config();
 
@@ -19,21 +20,21 @@ const client = new Client({
 });
 
 client.once(Events.ClientReady, (readyClient) => {
-	console.log(`Ready! Logged in as ${readyClient.user.tag}`);
-
 	const setupService = new SetupService(guildConfigManager);
-
 	client.setupService = setupService;
 
 	const configureService = new ConfigureService(guildConfigManager);
-
 	client.configureService = configureService;
 
 	const bookPollService = new BookPollService(client, pollManager, guildConfigManager);
-
 	client.bookPollService = bookPollService;
-
 	bookPollService.start();
+
+	const eventService = new EventService(client, eventManager, guildConfigManager);
+	client.eventService = eventService;
+	eventService.start();
+
+	console.log(`Ready! Logged in as ${readyClient.user.tag}`);
 });
 
 client.commands = new Collection();
@@ -88,8 +89,23 @@ client.on(Events.InteractionCreate, async (interaction) => {
 			return;
 		}
 
-		if (interaction.isMessageComponent()) {
+		if (interaction.isMessageComponent() || interaction.isModalSubmit()) {
 			await handleComponent(interaction);
+
+			return;
+		}
+
+		if (interaction.isAutocomplete()) {
+			const command = interaction.client.commands.get(interaction.commandName);
+
+			if (!command?.autocomplete) return;
+
+			try {
+				await command.autocomplete(interaction);
+			}
+			catch (error) {
+				console.error(error);
+			}
 
 			return;
 		}
