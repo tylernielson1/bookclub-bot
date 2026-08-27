@@ -17,6 +17,6 @@ Once you've added these values to a `.env` file and read the above section, you 
 
 ## Planned functionality
 - [X] Event creation, rsvp, and editing
-- [ ] Dockerization of app
+- [X] Dockerization of app
 - [ ] Trigger warning search, using doesthedogdie.com
 - [ ] Refactoring to a consistent architecture
