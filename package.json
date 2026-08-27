@@ -14,10 +14,10 @@
     "redis": "^6.1.0"
   },
   "scripts": {
-    "dev": "nodemon main.js",
-    "discord": "nodemon index.js",
+    "discord": "nodemon ./index.js",
     "deploy": "node deploy.js",
     "lint": "eslint .",
-    "lint:fix": "eslint --fix ."
+    "lint:fix": "eslint --fix .",
+    "start": "node ./index.js"
   }
 }
