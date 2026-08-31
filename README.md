@@ -21,5 +21,5 @@ Once you've added these values to a `.env` file and read the above section, you 
 - [ ] Trigger warning search, using doesthedogdie.com
 - [ ] Refactoring to a consistent architecture
 - [ ] Bracket Command, for book voting bracket
-- [ ] Event Clean Up & Optional Event Descriptions
+- [X] Event Clean Up & Optional Event Descriptions
 - [ ] Logging Framework Implementation
