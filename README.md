@@ -15,8 +15,11 @@ The bot is set up to persist information about servers in a sqlite database stor
 ### Running the bot
 Once you've added these values to a `.env` file and read the above section, you should just about be ready to add your bot to the server and run it locally. [This](https://discordjs.guide/legacy/preparations/adding-your-app) covers how to add an app to a server. Once you've added your version of the bot to the server of your choice, you will need to execute the `yarn deploy` command. This analyzes all of the commands located in the `src/commands` directory and pushes them to your bot. Without this, your bot has no concept of what functionality it has. After this command has ran successfully, you can run `yarn discord` to start up your bot. Congratulations! The bot should be running locally and can execute commands for you. The first command you will need to run is the `/register` command. If the server is not registered with the bot, very few commands will work. If you are testing the polling functionality, you will also need to run `/setup` to configure the polling information.
 
-## Planned functionality
+## Planned functionality/Features
 - [X] Event creation, rsvp, and editing
 - [X] Dockerization of app
 - [ ] Trigger warning search, using doesthedogdie.com
 - [ ] Refactoring to a consistent architecture
+- [ ] Bracket Command, for book voting bracket
+- [ ] Event Clean Up & Optional Event Descriptions
+- [ ] Logging Framework Implementation
