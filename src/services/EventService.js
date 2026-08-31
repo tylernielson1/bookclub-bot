@@ -124,7 +124,6 @@ class EventService {
 	}
 
 	async checkForReminders() {
-		console.log('checking for event reminders...');
 		for (const event of this.eventManager.getActiveEventsForReminders()) {
 			try {
 				await this.processEventReminder(event);
@@ -136,6 +135,7 @@ class EventService {
 	}
 
 	async processEventReminder(event) {
+		console.log('Processing event with id:', event.id);
 		const rsvps = this.eventManager.getEventRsvps(event.id);
 
 		const results = await Promise.allSettled(
@@ -159,6 +159,7 @@ class EventService {
 	}
 
 	start(interval = 30_000) {
+		console.log('Performing initial check for event reminders...');
 		this.checkForReminders().catch(error => {
 			console.error('Failed initial reminder check:', error);
 		});

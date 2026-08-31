@@ -3,14 +3,14 @@
  * @returns { Promise<void> }
  */
 exports.up = async function(knex) {
-    await knex.raw(`
+	await knex.raw(`
         CREATE TABLE registered_guilds (
             guild_id TEXT PRIMARY KEY,
             registered_at INTEGER NOT NULL DEFAULT (unixepoch())
         );
     `);
 
-    await knex.raw(`
+	await knex.raw(`
         CREATE TABLE guild_config (
             guild_id TEXT PRIMARY KEY,
             announcement_channel_id TEXT,
@@ -22,7 +22,7 @@ exports.up = async function(knex) {
         );
     `);
 
-    await knex.raw(`
+	await knex.raw(`
         CREATE TABLE polls (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             message_id TEXT NOT NULL UNIQUE,
@@ -41,7 +41,7 @@ exports.up = async function(knex) {
         );
     `);
 
-    await knex.raw(`
+	await knex.raw(`
         CREATE TABLE events (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             guild_id TEXT NOT NULL,
@@ -59,7 +59,7 @@ exports.up = async function(knex) {
         );
     `);
 
-    await knex.raw(`
+	await knex.raw(`
         CREATE TABLE event_rsvps (
             event_id INTEGER NOT NULL,
             user_id TEXT NOT NULL,
@@ -75,9 +75,9 @@ exports.up = async function(knex) {
  * @returns { Promise<void> }
  */
 exports.down = async function(knex) {
-    await knex.raw(`DROP TABLE event_rsvps;`);
-    await knex.raw(`DROP TABLE events;`);
-    await knex.raw(`DROP TABLE polls;`);
-    await knex.raw(`DROP TABLE guild_config;`);
-    await knex.raw(`DROP TABLE registered_guilds;`);
+	await knex.raw('DROP TABLE event_rsvps;');
+	await knex.raw('DROP TABLE events;');
+	await knex.raw('DROP TABLE polls;');
+	await knex.raw('DROP TABLE guild_config;');
+	await knex.raw('DROP TABLE registered_guilds;');
 };

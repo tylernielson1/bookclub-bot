@@ -34,7 +34,6 @@ class EventManager {
 	}
 
 	createEvent(data) {
-		console.log(data);
 		const row = this.db.get(
 			`
             INSERT INTO events (

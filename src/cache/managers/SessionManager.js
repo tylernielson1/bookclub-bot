@@ -13,7 +13,6 @@ class SessionManager {
 	}
 
 	async set(key, session) {
-		console.log(`Caching ${this.key(key)}\n${session.toJSON()}`);
 		return this.store.set(
 			this.key(key),
 			session.toJSON(),
