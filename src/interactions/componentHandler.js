@@ -494,7 +494,7 @@ async function handleEventEditModalComponent(interaction) {
 			data = parseStartTimeChange(value, event, 3);
 			break;
 
-		case 'description': 
+		case 'description':
 			data = {
 				description: value.trim(),
 			};

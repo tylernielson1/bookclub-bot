@@ -39,11 +39,11 @@ module.exports = {
 						.setDescription('Time of the event.')
 						.setRequired(true),
 				)
-                .addStringOption((option) => 
-                    option
-                        .setName('description')
-                        .setDescription('Optional description/details for the event.'),
-                ),
+				.addStringOption((option) =>
+					option
+						.setName('description')
+						.setDescription('Optional description/details for the event.'),
+				),
 		)
 		.addSubcommand((subcommand) =>
 			subcommand
@@ -81,7 +81,7 @@ module.exports = {
 			const time = parseTime(interaction.options.getString('time'));
 			const channel = interaction.channel;
 			const creatorId = interaction.user.id;
-            const description = interaction.options.getString('description');
+			const description = interaction.options.getString('description');
 
 			await interaction.deferReply();
 
@@ -92,7 +92,7 @@ module.exports = {
 					date: date,
 					time: time,
 					userId: creatorId,
-                    description: description,
+					description: description,
 				}, channel);
 
 				return interaction.deleteReply();

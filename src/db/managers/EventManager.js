@@ -21,7 +21,7 @@ class EventManager {
 			cancelled: row.cancelled,
 			status: row.status,
 			rsvps: this.mapRowsToRsvp(rsvps),
-            description: row.description,
+			description: row.description,
 		});
 	}
 
@@ -60,7 +60,7 @@ class EventManager {
 				data.startTime,
 				data.reminderAt,
 				data.status,
-                data.description,
+				data.description,
 			],
 		);
 
@@ -112,7 +112,7 @@ class EventManager {
 			status: 'status',
 			reminderAt: 'reminder_at',
 			reminderSent: 'reminder_sent',
-            description: 'description',
+			description: 'description',
 		};
 
 		const updates = [];
@@ -220,21 +220,21 @@ class EventManager {
 		return this.mapRowsToRsvp(rows);
 	}
 
-    getExpiredEvents() {
-        const rows = this.db.all(
-            `
+	getExpiredEvents() {
+		const rows = this.db.all(
+			`
             SELECT *
             FROM events
             WHERE start_time <= ?
             AND status = 'active'
             `,
-            [Date.now() - 60 * 1 * 1000]
-        );
+			[Date.now() - 60 * 1 * 1000],
+		);
 
-        return rows.map((row) => {
-            return this.mapRowToEvent(row);
-        });
-    }
+		return rows.map((row) => {
+			return this.mapRowToEvent(row);
+		});
+	}
 }
 
 module.exports = EventManager;
