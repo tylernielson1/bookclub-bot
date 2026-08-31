@@ -30,8 +30,8 @@ class EventView {
 	}
 
 	buildEventEmbed(event, rsvpCount) {
-		return new EmbedBuilder()
-			.setColor(event.cancelled ? 0x808080 : 0x4F46E5)
+        const embed = new EmbedBuilder()
+            .setColor(event.cancelled ? 0x808080 : 0x4F46E5)
 			.setTitle(event.cancelled ? `${event.name} - CANCELLED` : event.name)
 			.addFields(
 				{
@@ -50,6 +50,17 @@ class EventView {
 					value: `${rsvpCount} attending`,
 				},
 			);
+
+        if (event.description) {
+            embed.addFields(
+                {
+                    name: '💬 Description',
+                    value: event.description,
+                }
+            );
+        }
+
+        return embed;
 	}
 
 	buildAttendeesEmbed(eventName, mentions) {

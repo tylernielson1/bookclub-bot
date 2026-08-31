@@ -10,6 +10,11 @@ services:
       - redis
     volumes:
       - ./data:/app/data
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
   
   redis:
     container_name: bookclub-redis
@@ -17,6 +22,11 @@ services:
     restart: unless-stopped
     volumes:
       - redis-data:/data
-    
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 volumes:
   redis-data:

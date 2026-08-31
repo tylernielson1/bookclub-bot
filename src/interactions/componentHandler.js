@@ -407,15 +407,9 @@ async function handleEventComponent(interaction) {
 
 	case 'event_attendees': {
 		const event = eventService.getEvent(eventId);
-
-		console.log(event.rsvps);
-
 		const mentions = event.rsvps.map((attendee) => {
 			return `<@${attendee.userId}>`;
 		}).join('\n');
-
-		console.log(mentions);
-
 		return interaction.reply(EventView.renderAttendees(event.name, mentions));
 	}
 
@@ -498,6 +492,12 @@ async function handleEventEditModalComponent(interaction) {
 
 		case 'time':
 			data = parseStartTimeChange(value, event, 3);
+			break;
+
+		case 'description': 
+			data = {
+				description: value.trim(),
+			};
 			break;
 
 		default:

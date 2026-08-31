@@ -14,7 +14,10 @@ class EventEditView {
 	render(event) {
 		return {
 			embeds: [this.buildEventEditEmbed(event)],
-			components: [this.buildEditButtons(event.id)],
+			components: [
+                this.buildEditButtons(event.id),
+                this.buildDoneButton(event.id),
+            ],
 		};
 	}
 
@@ -33,6 +36,10 @@ class EventEditView {
 						discordTimestamp(event.startTime, 'R'),
 					].join('\n'),
 				},
+                {
+                    name: '💬 Description',
+                    value: event.description ?? 'None provided.', 
+                },
 			);
 	}
 
@@ -59,12 +66,22 @@ class EventEditView {
 					.setLabel('Edit Time')
 					.setStyle(ButtonStyle.Primary),
 
-				new ButtonBuilder()
+                new ButtonBuilder()
+                    .setCustomId(`eventEdit_:description:${eventId}`)
+                    .setLabel('Edit Description')
+                    .setStyle(ButtonStyle.Primary),
+			);
+	}
+
+    buildDoneButton(eventId) {
+        return new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder()
 					.setCustomId(`eventEdit_done:done:${eventId}`)
 					.setLabel('Done')
 					.setStyle(ButtonStyle.Secondary),
-			);
-	}
+            );
+    }
 
 	buildEditModal(field, event) {
 		const modal = new ModalBuilder()
@@ -99,6 +116,9 @@ class EventEditView {
 		case 'time':
 			return 'Time';
 
+        case 'description':
+            return 'Description';
+
 		default:
 			throw new Error(`Unknown event field: ${field}`);
 		}
@@ -120,6 +140,9 @@ class EventEditView {
 
 		case 'time':
 			return time;
+
+        case 'description':
+            return event.description ?? 'None provided';
 
 		default:
 			throw new Error(`Unknown event field: ${field}`);

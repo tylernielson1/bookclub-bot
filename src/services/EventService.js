@@ -33,6 +33,7 @@ class EventService {
 			location: data.location,
 			startTime: startTimeEpochMillis,
 			reminderAt: reminderTimeEpochMillis,
+            description: data.description,
 		};
 
 		const event = this.eventManager.createEvent({
@@ -158,17 +159,43 @@ class EventService {
 		this.eventManager.editEvent(event.id, { reminderSent: 1 });
 	}
 
-	start(interval = 30_000) {
-		console.log('Performing initial check for event reminders...');
-		this.checkForReminders().catch(error => {
-			console.error('Failed initial reminder check:', error);
-		});
+    async checkForExpiration() {
+        for (const event of this.eventManager.getExpiredEvents()) {
+            try {
+                await this.processEventExpiration(event);
+            } catch (error) {
+                console.error(`Failed to properly expire event ${event.id}:`, error);
+            }
+        }
+    }
 
-		this.interval = setInterval(() => {
-			this.checkForReminders().catch(error => {
-				console.error('Failed reminder check:', error);
-			});
-		}, interval);
+    async processEventExpiration(event) {
+        console.log('Expiring event with id:', event.id);
+        if (!event.channelId || !event.messageId) return;
+
+        const channel = await this.client.channels.fetch(event.channelId);
+        const message = await channel.messages.fetch(event.messageId);
+        await message.delete();
+
+        this.eventManager.editEvent(event.id, { status: 'complete' });
+        console.log('Expired event with id:', event.id)
+    }
+
+	start(interval = 30_000) {
+        const run = () => {
+            this.checkForReminders().catch(error => {
+                console.error('Failed reminder check:', error);
+            });
+
+            this.checkForExpiration().catch(error => {
+                console.error('Failed expiration check:', error);
+            });
+        }
+
+		console.log('Performing initial check for event reminders and expiration...');
+		run();
+
+		this.interval = setInterval(run, interval);
 
 		return this.interval;
 	}
