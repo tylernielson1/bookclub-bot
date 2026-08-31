@@ -228,7 +228,7 @@ class EventManager {
             WHERE start_time <= ?
             AND status = 'active'
             `,
-			[Date.now() - 60 * 1 * 1000],
+			[Date.now() - 60 * 30 * 1000],
 		);
 
 		return rows.map((row) => {
