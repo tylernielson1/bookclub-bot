@@ -13,6 +13,7 @@ class Event {
 		cancelled,
 		rsvps,
 		reminderInterval = 3,
+		description,
 	}) {
 		this.id = id;
 		this.guildId = guildId;
@@ -27,6 +28,7 @@ class Event {
 		this.cancelled = cancelled;
 		this.rsvps = rsvps;
 		this.reminderInterval = reminderInterval;
+		this.description = description;
 	}
 }
 

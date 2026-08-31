@@ -21,6 +21,7 @@ class EventManager {
 			cancelled: row.cancelled,
 			status: row.status,
 			rsvps: this.mapRowsToRsvp(rsvps),
+			description: row.description,
 		});
 	}
 
@@ -34,7 +35,6 @@ class EventManager {
 	}
 
 	createEvent(data) {
-		console.log(data);
 		const row = this.db.get(
 			`
             INSERT INTO events (
@@ -45,9 +45,10 @@ class EventManager {
                 location,
                 start_time,
                 reminder_at,
-                status
+                status,
+                description
             )
-            VALUES(?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
             RETURNING *
             `,
 			[
@@ -59,6 +60,7 @@ class EventManager {
 				data.startTime,
 				data.reminderAt,
 				data.status,
+				data.description,
 			],
 		);
 
@@ -110,6 +112,7 @@ class EventManager {
 			status: 'status',
 			reminderAt: 'reminder_at',
 			reminderSent: 'reminder_sent',
+			description: 'description',
 		};
 
 		const updates = [];
@@ -215,6 +218,22 @@ class EventManager {
 		);
 
 		return this.mapRowsToRsvp(rows);
+	}
+
+	getExpiredEvents() {
+		const rows = this.db.all(
+			`
+            SELECT *
+            FROM events
+            WHERE start_time <= ?
+            AND status = 'active'
+            `,
+			[Date.now() - 60 * 1 * 1000],
+		);
+
+		return rows.map((row) => {
+			return this.mapRowToEvent(row);
+		});
 	}
 }
 

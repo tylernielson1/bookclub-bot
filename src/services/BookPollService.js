@@ -49,7 +49,6 @@ class BookPollService {
 	}
 
 	async checkExpiredPolls() {
-		console.log('checking for expired polls...');
 		for (const poll of this.pollManager.getExpiredPolls()) {
 			try {
 				await this.processExpiredPoll(poll);
@@ -295,6 +294,7 @@ class BookPollService {
 	}
 
 	start(interval = 30_000) {
+		console.log('Performing initial check for expired polls...');
 		this.checkExpiredPolls().catch(error => {
 			console.error('Failed initial poll check:', error);
 		});
