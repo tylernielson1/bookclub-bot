@@ -235,8 +235,6 @@ class BookPollService {
 			await thread.send(BookPollView.buildBookMessage(book));
 		}
 
-		const expires = Date.now() + 60_000;
-
 		this.pollManager.createPoll({
 			messageId: pollMessage.id,
 			channelId: channelId,
@@ -244,7 +242,7 @@ class BookPollService {
 			books: books,
 			announcementChannelId: config.announcementChannelId,
 			discussionChannelId: config.discussionChannelId,
-			expiresAt: expires,
+			expiresAt: pollMessage.poll.expiresAt.getTime(),
 			breakTies: breakTies,
 		});
 
