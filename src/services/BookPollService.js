@@ -152,6 +152,8 @@ class BookPollService {
 				return {
 					...this.buildFallbackBook(input),
 					...(details ?? {}),
+					storygraphLink: details?.storygraphLink ?? null,
+					goodreadsLink: details?.goodreadsLink ?? null,
 				};
 			}),
 		);
