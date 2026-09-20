@@ -21,6 +21,7 @@ class PollManager {
 			expiresAt: row.expires_at,
 			createdAt: row.created_at,
 			processedAt: row.processed_at,
+			breakTies: row.break_ties,
 		});
 	}
 
@@ -34,9 +35,10 @@ class PollManager {
                 expires_at,
                 announcement_channel_id,
                 discussion_channel_id,
-                books
+                books,
+				break_ties
             )
-            VALUES(?, ?, ?, ?, ?, ?, ?)
+            VALUES(?, ?, ?, ?, ?, ?, ?, ?)
             `,
 			[
 				data.messageId,
@@ -46,6 +48,7 @@ class PollManager {
 				data.announcementChannelId,
 				data.discussionChannelId,
 				JSON.stringify(data.books),
+				data.breakTies,
 			],
 		);
 	}

@@ -1,34 +1,234 @@
 const BookPollView = require('../ui/BookPollView');
 const FamiliarMessages = require('../utils/FamiliarMessages');
+const { openLibraryClient } = require('../api');
 
 class BookPollService {
-	constructor(client, pollManager, guildConfigManager) {
+	constructor(client, pollManager, guildConfigManager, pollWizardManager = null) {
 		this.client = client;
 		this.pollManager = pollManager;
 		this.guildConfigManager = guildConfigManager;
+		this.pollWizards = pollWizardManager ?? new Map();
 	}
 
-	async createPoll(channel, books, pollName) {
-		if (!Array.isArray(books) || books.length !== 3) {
-			throw new Error('A book poll requires exactly three books.');
+	startPollWizard(interaction, pollName, bookCount) {
+		if (this.pollWizards.has(interaction.user.id)) {
+			throw new Error('You already have a book poll in progress.');
 		}
 
-		const config = this.guildConfigManager.mapRowToGuildConfig(await this.guildConfigManager.getGuildConfig(channel.guildId));
+		const wizard = {
+			userId: interaction.user.id,
+			guildId: interaction.guildId,
+			channelId: interaction.channelId,
+			pollName,
+			bookCount,
+			inputs: [],
+			currentBook: 1,
+			duration: null,
+			decideTies: false,
+		};
+
+		this.pollWizards.set(interaction.user.id, wizard);
+
+		return BookPollView.buildPollWizardStart(wizard);
+	}
+
+	buildPollWizard(interaction) {
+		if (!this.pollWizards.has(interaction.user.id)) {
+			throw new Error('No book poll in progress.');
+		}
+
+		const wizard = this.pollWizards.get(interaction.user.id);
+
+		return BookPollView.buildPollWizardInput(wizard);
+	}
+
+	buildPollWizardModal(interaction, modalType) {
+		if (!this.pollWizards.has(interaction.user.id)) {
+			throw new Error('No book poll in progress.');
+		}
+
+		const wizard = this.pollWizards.get(interaction.user.id);
+
+		if (modalType === 'titleAuthor') {
+			return BookPollView.buildTitleAuthorModal(wizard);
+		}
+		else if (modalType === 'isbn') {
+			return BookPollView.buildIsbnModal(wizard);
+		}
+		else {
+			throw new Error('Invalid modal type.');
+		}
+	}
+
+
+	async handleBookInput(interaction, type) {
+		if (!this.pollWizards.has(interaction.user.id)) {
+			throw new Error('No book poll in progress.');
+		}
+
+		const wizard = this.pollWizards.get(interaction.user.id);
+
+		let input;
+
+		if (type === 'titleAuthor') {
+			const title = interaction.fields
+				.getTextInputValue('title')
+				.trim();
+
+			const author = interaction.fields
+				.getTextInputValue('author')
+				.trim();
+
+			input = {
+				type,
+				title,
+				author,
+			};
+		}
+		else if (type === 'isbn') {
+			const isbn = interaction.fields
+				.getTextInputValue('isbn')
+				.trim();
+
+			input = {
+				type,
+				isbn,
+			};
+		}
+		else {
+			throw new Error(`Unknown book poll wizard modal: ${type}`);
+		}
+
+		wizard.inputs.push(input);
+		wizard.currentBook++;
+
+		if (wizard.inputs.length < wizard.bookCount) {
+			return BookPollView.buildPollWizardInput(wizard);
+		}
+
+		await this.enrichBooks(wizard);
+
+		return BookPollView.buildPollWizardDurationInput(wizard);
+	}
+
+	handlePollWizardDuration(interaction) {
+		if (!this.pollWizards.has(interaction.user.id)) {
+			throw new Error('No book poll in progress.');
+		}
+
+		const wizard = this.pollWizards.get(interaction.user.id);
+		const duration = Number(interaction.values[0]);
+
+		wizard.duration = duration;
+
+		return BookPollView.buildPollWizardTiebreakerInput(wizard);
+	}
+
+	handlePollWizardTiebreaker(interaction) {
+		if (!this.pollWizards.has(interaction.user.id)) {
+			throw new Error('No book poll in progress.');
+		}
+
+		const wizard = this.pollWizards.get(interaction.user.id);
+		const tiebreaker = Number(interaction.values[0]);
+
+		wizard.decideTies = tiebreaker;
+
+		return BookPollView.buildPollWizardConfirmation(wizard);
+	}
+
+	async enrichBooks(wizard) {
+		wizard.books = await Promise.all(
+			wizard.inputs.map(async input => {
+				let details = null;
+
+				try {
+					details = await this.enrichBook(input);
+				}
+				catch (error) {
+					console.error('Error resolving book:', error);
+				}
+
+				return {
+					...this.buildFallbackBook(input),
+					...(details ?? {}),
+				};
+			}),
+		);
+
+		return wizard.books;
+	}
+
+	async enrichBook(input) {
+		if (input.type === 'isbn') {
+			return openLibraryClient.searchIsbn(input.isbn);
+		}
+
+		if (input.type === 'titleAuthor') {
+			return openLibraryClient.searchTitleAuthorDetails(input.title, input.author);
+		}
+
+		throw new Error(`Unknown book input type: ${input.type}`);
+	}
+
+	buildFallbackBook(input) {
+		if (input.type === 'titleAuthor') {
+			return {
+				title: input.title,
+				authors: input.author,
+			};
+		}
+
+		return {
+			title: `ISBN: ${input.isbn}`,
+			authors: 'Unknown',
+			isbn: input.isbn,
+		};
+	}
+
+	async handlePollWizardConfirm(interaction) {
+		if (!this.pollWizards.has(interaction.user.id)) {
+			throw new Error('No book poll in progress');
+		}
+
+		const wizard = this.pollWizards.get(interaction.user.id);
+
+		const pollMessage = await this.createPoll(
+			wizard.guildId,
+			wizard.channelId,
+			wizard.books,
+			wizard.pollName,
+			wizard.duration,
+			wizard.decideTies,
+		);
+
+		this.pollWizards.delete(interaction.user.id);
+
+		return pollMessage;
+	}
+
+	cancelPollWizard(interaction) {
+		if (this.pollWizards.has(interaction.user.id)) {
+			this.pollWizards.delete(interaction.user.id);
+		}
+	}
+
+	async createPoll(guildId, channelId, books, pollName, duration, breakTies) {
+		const config = this.guildConfigManager.getGuildConfig(guildId);
+		const channel = await this.client.channels.fetch(channelId);
 
 		if (!config) {
 			throw new Error('Book polls have not been configured for this server.');
 		}
 
 		const pollMessage = await channel.send(
-			BookPollView.render(books, pollName, {
-				duration: config.pollDuration,
-			}),
+			BookPollView.render(books, pollName, duration),
 		);
 
 		const thread = await pollMessage.startThread({
-			name: '📚 Book Discussion',
+			name: '📚 Book Details',
 			autoArchiveDuration: 10080,
-			reason: 'Book poll discussion',
+			reason: 'Book poll details',
 		});
 
 		for (const book of books) {
@@ -37,12 +237,13 @@ class BookPollService {
 
 		this.pollManager.createPoll({
 			messageId: pollMessage.id,
-			channelId: channel.id,
-			guildId: channel.guildId,
+			channelId: channelId,
+			guildId: guildId,
 			books: books,
 			announcementChannelId: config.announcementChannelId,
 			discussionChannelId: config.discussionChannelId,
 			expiresAt: pollMessage.poll.expiresAt.getTime(),
+			breakTies: breakTies,
 		});
 
 		return pollMessage;
@@ -59,7 +260,7 @@ class BookPollService {
 		}
 	}
 
-	async processExpiredPoll(poll, useTieSelector = false) {
+	async processExpiredPoll(poll) {
 		console.log(`Processing poll ${poll.id}`);
 		const channel = await this.client.channels.fetch(poll.channelId);
 
@@ -75,9 +276,8 @@ class BookPollService {
 
 		// Make sure the latest poll data is available.
 		const pollData = message.poll;
-		const winner = useTieSelector ?
-			this.getTiedWinner(pollData, poll.books) : this.getWinner(pollData, poll.books);
-		if (!winner) {
+		const winners = this.getWinners(pollData, poll.books);
+		if (!winners || !poll.breakTies) {
 			const noWinnerMessage = await this.announceNoWinner(poll);
 			const completed = this.pollManager.completePoll(poll.id, {
 				winner: null,
@@ -91,7 +291,9 @@ class BookPollService {
 			return;
 		}
 
-		const result = await this.announceWinner(poll, winner, useTieSelector);
+		const winner = winners.length === 1 ? winners[0] : winners[Math.floor(Math.random() * winners.length)];
+
+		const result = await this.announceWinner(poll, winner, (winners.length > 1 && poll.breakTies));
 
 		const completed = this.pollManager.completePoll(poll.id, {
 			winner: winner.title,
@@ -104,54 +306,23 @@ class BookPollService {
 		}
 	}
 
-	getWinner(poll, books) {
+	getWinners(poll, books) {
 		const answers = [...poll.answers.values()];
 
 		if (!answers.length) {
 			return null;
 		}
 
-		let winningAnswer = null;
-
-		for (const answer of answers) {
-			if (!winningAnswer || answer.voteCount > winningAnswer.voteCount) {
-				winningAnswer = answer;
-			}
-		}
-
-		if (!winningAnswer || winningAnswer.voteCount === 0) {
-			return null;
-		}
-
-		const answerIndex = answers.findIndex(answer => answer.id === winningAnswer.id);
-
-		return books[answerIndex] ?? null;
-	}
-
-	getTiedWinner(poll, books) {
-		const answers = [...poll.answers.values()];
-
-		if (!answers.length) {
-			return null;
-		}
-
-		const maxVotes = Math.max(
-			...answers.map(answer => answer.voteCount),
-		);
+		const maxVotes = Math.max(...answers.map(answer => answer.voteCount));
 
 		if (maxVotes === 0) {
 			return null;
 		}
 
-		const tiedAnswers = answers.filter(
-			answer => answer.voteCount === maxVotes,
-		);
-
-		const winningAnswer = tiedAnswers[Math.floor(Math.random() * tiedAnswers.length)];
-
-		const answerIndex = answers.findIndex(answer => answer.id === winningAnswer.id);
-
-		return books[answerIndex] ?? null;
+		return answers
+			.map((answer, index) => ({ answer, index }))
+			.filter(({ answer }) => answer.voteCount === maxVotes)
+			.map(({ index }) => books[index]);
 	}
 
 	async announceNoWinner(poll) {
@@ -187,7 +358,7 @@ class BookPollService {
 		return announcement;
 	}
 
-	async announceWinner(poll, winner, useTieSelector) {
+	async announceWinner(poll, winner, wasTied) {
 		const announcementChannel = await this.client.channels.fetch(poll.announcementChannelId);
 
 		if (!announcementChannel?.isTextBased()) {
@@ -257,7 +428,7 @@ class BookPollService {
 		const announcement = await announcementChannel.send(
 			BookPollView.buildWinnerAnnouncement(
 				winner.title,
-				useTieSelector,
+				wasTied,
 				discussion?.url,
 			),
 		);

@@ -14,6 +14,7 @@ class Poll {
 		expiresAt,
 		createdAt = Date.now(),
 		processedAt = null,
+		breakTies = false,
 	}) {
 		this.id = id;
 		this.messageId = messageId;
@@ -33,6 +34,8 @@ class Poll {
 		this.expiresAt = expiresAt;
 		this.createdAt = createdAt;
 		this.processedAt = processedAt;
+
+		this.breakTies = breakTies;
 	}
 }
 

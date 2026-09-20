@@ -1,9 +1,8 @@
 class GuildConfig {
-	constructor(guildId, announcementChannelId, discussionChannelId, pollDuration) {
+	constructor(guildId, announcementChannelId, discussionChannelId) {
 		this.guildId = guildId;
 		this.announcementChannelId = announcementChannelId;
 		this.discussionChannelId = discussionChannelId;
-		this.pollDuration = pollDuration;
 	}
 }
 

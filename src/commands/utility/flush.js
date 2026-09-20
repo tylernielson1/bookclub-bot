@@ -11,6 +11,7 @@ module.exports = {
 				.addChoices(
 					{ name: 'API', value: 'api-cache' },
 					{ name: 'Session', value: 'session-cache' },
+					{ name: 'Polls', value: 'poll-wizard' },
 					{ name: 'All', value: 'all' },
 				).setRequired(true),
 		)
