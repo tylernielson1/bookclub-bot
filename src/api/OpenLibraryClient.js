@@ -65,8 +65,8 @@ class OpenLibraryClient {
 			detailsJson.isbn_13[0],
 			detailsJson.works[0].key,
 			null,
-			`https://www.goodreads.com/book/show/${goodreadsId}`,
-			`https://app.thestorygraph.com/books/${storygraphId}`,
+			goodreadsId,
+			storygraphId,
 			detailsJson.pagination,
 		);
 
@@ -118,8 +118,8 @@ class OpenLibraryClient {
 			bestEdition.isbn13,
 			worksJson.key,
 			bestEdition.key,
-			bestEdition.goodreadsLink,
-			bestEdition.storygraphLink,
+			bestEdition.goodreadsId,
+			bestEdition.storygraphId,
 			bestEdition.pages,
 		);
 
