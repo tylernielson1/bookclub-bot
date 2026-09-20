@@ -32,6 +32,10 @@ async function handleComponent(interaction) {
 			return handleEventEditComponent(interaction);
 		}
 
+		if (interaction.customId.startsWith('bookpoll_')) {
+			return handlePollCreationComponent(interaction);
+		}
+
 		return handleBookSearchComponent(interaction);
 	}
 	catch (error) {
@@ -520,6 +524,79 @@ async function handleEventEditModalComponent(interaction) {
 			content: FamiliarMessages.apiUnavailable(),
 			flags: MessageFlags.Ephemeral,
 		});
+	}
+}
+
+async function handlePollCreationComponent(interaction) {
+	const pollService = interaction.client.bookPollService;
+	const [action,,] = interaction.customId.split(':');
+
+	if (!pollService) {
+		throw new Error('BookPollService has not been initialized.');
+	}
+
+	switch (action) {
+	case 'bookpoll_next': {
+		await interaction.deferUpdate();
+		const view = pollService.buildPollWizard(interaction);
+		return interaction.editReply(view);
+	}
+	case 'bookpoll_title-author': {
+		const modal = pollService.buildPollWizardModal(interaction, 'titleAuthor');
+		return interaction.showModal(modal);
+	}
+	case 'bookpoll_isbn': {
+		const modal = pollService.buildPollWizardModal(interaction, 'isbn');
+		return interaction.showModal(modal);
+	}
+	case 'bookpoll_modal_title-author': {
+		await interaction.deferUpdate();
+		const nextView = await pollService.handleBookInput(interaction, 'titleAuthor');
+		return interaction.editReply(nextView);
+	}
+	case 'bookpoll_modal_isbn': {
+		await interaction.deferUpdate();
+		const nextView = await pollService.handleBookInput(interaction, 'isbn');
+		return interaction.editReply(nextView);
+	}
+	case 'bookpoll_duration': {
+		await interaction.deferUpdate();
+		const nextView = await pollService.handlePollWizardDuration(interaction);
+		return interaction.editReply(nextView);
+	}
+	case 'bookpoll_tiebreaker': {
+		await interaction.deferUpdate();
+		const nextView = await pollService.handlePollWizardTiebreaker(interaction);
+		return interaction.editReply(nextView);
+	}
+	case 'bookpoll_confirm': {
+		await interaction.deferUpdate();
+		await pollService.handlePollWizardConfirm(interaction);
+		return interaction.editReply({
+			content: 'Poll Creation completed.',
+			embeds: [],
+			components: [],
+			flags: MessageFlags.Ephemeral,
+		});
+	}
+	case 'bookpoll_restart': {
+		await interaction.deferUpdate();
+		await pollService.handlePollWizardRestart(interaction);
+		break;
+	}
+	case 'bookpoll_cancel': {
+		await interaction.deferUpdate();
+		pollService.cancelPollWizard(interaction);
+		return interaction.editReply({
+			content: 'Poll Creation cancelled.',
+			embeds: [],
+			components: [],
+			flags: MessageFlags.Ephemeral,
+		});
+	}
+	default: {
+		throw new Error(`Unknown component: ${interaction.customId}`);
+	}
 	}
 }
 

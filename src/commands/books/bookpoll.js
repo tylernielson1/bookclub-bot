@@ -1,110 +1,50 @@
-const { SlashCommandBuilder } = require('discord.js');
-const { openLibraryClient } = require('../../api');
+const { MessageFlags, SlashCommandBuilder } = require('discord.js');
 const FamiliarMessages = require('../../utils/FamiliarMessages');
-
-async function resolveBook(input) {
-	const parsed = await parseBookInput(input);
-
-	if (!parsed) return null;
-
-	let result;
-
-	if (parsed.type === 'isbn') {
-		result = await openLibraryClient.searchIsbn(parsed.value);
-	}
-
-	if (parsed.type === 'titleAuthor') {
-		result = await openLibraryClient.searchTitleAuthorDetails(parsed.title, parsed.author);
-	}
-
-	return result;
-}
-
-function parseBookInput(input) {
-	const data = input.trim();
-
-	const isbn = data.replace(/[-\s]/g, '');
-
-	if (/^\d{9}[\dX]$/.test(isbn) || /^\d{13}$/.test(isbn)) {
-		return {
-			type: 'isbn',
-			value: isbn,
-		};
-	}
-
-	const separatorIndex = data.indexOf('|');
-
-	if (separatorIndex === -1) return null;
-
-	const title = data.slice(0, separatorIndex).trim();
-	const author = data.slice(separatorIndex + 1).trim();
-
-	if (!title || !author) {
-		return null;
-	}
-
-	return {
-		type: 'titleAuthor',
-		title: title,
-		author: author,
-	};
-}
 
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('bookpoll')
-		.setDescription('Creates a poll using the three provided books. The book can be identified by ISBN or Title | Author')
+		.setDescription('Starts the book poll creation wizard using the provided poll name and number of books.')
 		.addStringOption((option) => option.setName('pollname').setDescription('The name of the poll').setRequired(true))
-		.addStringOption((option) => option.setName('book1').setDescription('ISBN OR Title and Author, separated by |').setRequired(true))
-		.addStringOption((option) => option.setName('book2').setDescription('ISBN OR Title and Author, separated by |').setRequired(true))
-		.addStringOption((option) => option.setName('book3').setDescription('ISBN OR Title and Author, separated by |').setRequired(true)),
+		.addNumberOption((option) => option.setName('bookcount').setDescription('The number of books to add to the poll').setRequired(true)),
 	requiresRegistration: true,
 	async execute(interaction) {
-		const inputs = [
-			interaction.options.getString('book1'),
-			interaction.options.getString('book2'),
-			interaction.options.getString('book3'),
-		];
+		const pollName = interaction.options.getString('pollname');
+		const bookCount = interaction.options.getNumber('bookcount');
+		const pollService = interaction.client.bookPollService;
 
-		await interaction.deferReply();
-
-		const books = [];
-
-		for (const input of inputs) {
-			let book;
-			try {
-				book = await resolveBook(input);
-			}
-			catch (error) {
-				console.error('Error fetching books:', error);
-				return interaction.editReply({
-					content: FamiliarMessages.apiUnavailable(),
-				});
-			}
-
-
-			if (!book) {
-				return interaction.editReply({
-					content: FamiliarMessages.noResults(),
-				});
-			}
-
-			books.push(book);
+		if (!pollService) {
+			return await interaction.reply({
+				content: FamiliarMessages.apiUnavailable(),
+				flags: MessageFlags.Ephemeral,
+			});
 		}
+
+		if (bookCount < 2) {
+			return await interaction.reply({
+				content: 'A poll requires at least two choices.',
+				flags: MessageFlags.Ephemeral,
+			});
+		}
+
 		try {
-			await interaction.client.bookPollService.createPoll(
-				interaction.channel,
-				books,
-				interaction.options.getString('pollname'),
+			const wizard = pollService.startPollWizard(
+				interaction,
+				pollName,
+				bookCount,
 			);
 
-			return interaction.deleteReply();
+			return await interaction.reply({
+				...wizard,
+				flags: MessageFlags.Ephemeral,
+			});
 		}
 		catch (error) {
-			console.error('Error creating book poll:', error);
+			console.error('Error starting book poll wizard:', error);
 
-			return interaction.editReply({
+			return interaction.reply({
 				content: FamiliarMessages.apiUnavailable(),
+				flags: MessageFlags.Ephemeral,
 			});
 		}
 	},

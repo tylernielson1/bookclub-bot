@@ -4,7 +4,6 @@ const {
 	ChannelType,
 	ButtonBuilder,
 	ButtonStyle,
-	StringSelectMenuBuilder,
 } = require('discord.js');
 
 class SetupService {
@@ -18,7 +17,6 @@ class SetupService {
 			step: 'announcement',
 			announcementChannelId: null,
 			discussionChannelId: null,
-			pollDuration: null,
 		});
 
 		return this.buildAnnouncementStep();
@@ -84,28 +82,13 @@ class SetupService {
 		};
 	}
 
-	buildDurationStep() {
-		const durationSelect = new StringSelectMenuBuilder()
-			.setCustomId('setup_poll_duration')
-			.setPlaceholder('Select a poll duration')
-			.addOptions(
-				{
-					label: '24 hours',
-					value: '24',
-				},
-				{
-					label: '3 days',
-					value: '72',
-				},
-				{
-					label: '1 week',
-					value: '168',
-				},
-				{
-					label: '2 weeks',
-					value: '336',
-				},
-			);
+	buildConfirmationStep(guildId) {
+		const session = this.getSession(guildId);
+
+		const confirmButton = new ButtonBuilder()
+			.setCustomId('setup_confirm')
+			.setLabel('Confirm Setup')
+			.setStyle(ButtonStyle.Success);
 
 		const backButton = new ButtonBuilder()
 			.setCustomId('setup_back_discussion')
@@ -120,44 +103,9 @@ class SetupService {
 		return {
 			content:
                 '📚 **Book Club Setup**\n\n' +
-                'How long should book polls remain open?',
-			components: [
-				new ActionRowBuilder().addComponents(durationSelect),
-				new ActionRowBuilder().addComponents(
-					backButton,
-					cancelButton,
-				),
-			],
-		};
-	}
-
-	buildConfirmationStep(guildId) {
-		const session = this.getSession(guildId);
-
-		const confirmButton = new ButtonBuilder()
-			.setCustomId('setup_confirm')
-			.setLabel('Confirm Setup')
-			.setStyle(ButtonStyle.Success);
-
-		const backButton = new ButtonBuilder()
-			.setCustomId('setup_back_duration')
-			.setLabel('Back')
-			.setStyle(ButtonStyle.Secondary);
-
-		const cancelButton = new ButtonBuilder()
-			.setCustomId('setup_cancel')
-			.setLabel('Cancel')
-			.setStyle(ButtonStyle.Danger);
-
-		const duration = this.formatDuration(session.pollDuration);
-
-		return {
-			content:
-                '📚 **Book Club Setup**\n\n' +
                 'Here is your configuration:\n\n' +
                 `📢 **Announcement:** <#${session.announcementChannelId}>\n` +
                 `💬 **Discussion:** <#${session.discussionChannelId}>\n` +
-                `⏱️ **Poll duration:** ${duration}\n\n` +
                 'Is everything correct?',
 			components: [
 				new ActionRowBuilder().addComponents(
@@ -167,20 +115,6 @@ class SetupService {
 				),
 			],
 		};
-	}
-
-	formatDuration(hours) {
-		if (hours < 24) {
-			return `${hours} hours`;
-		}
-
-		const days = hours / 24;
-
-		if (days === 1) {
-			return '1 day';
-		}
-
-		return `${days} days`;
 	}
 
 	async setAnnouncementChannel(guildId, channelId) {
@@ -204,19 +138,6 @@ class SetupService {
 		}
 
 		session.discussionChannelId = channelId;
-		session.step = 'duration';
-
-		return this.buildDurationStep();
-	}
-
-	async setPollDuration(guildId, duration) {
-		const session = this.getSession(guildId);
-
-		if (!session) {
-			throw new Error('No active setup session.');
-		}
-
-		session.pollDuration = Number(duration);
 		session.step = 'confirmation';
 
 		return this.buildConfirmationStep(guildId);
@@ -233,7 +154,6 @@ class SetupService {
 			this.guildConfigManager.saveConfig(guildId, {
 				announcementChannelId: session.announcementChannelId,
 				discussionChannelId: session.discussionChannelId,
-				pollDuration: session.pollDuration,
 			});
 
 			this.sessions.delete(guildId);
@@ -261,9 +181,6 @@ class SetupService {
 
 		case 'discussion':
 			return this.buildDiscussionStep();
-
-		case 'duration':
-			return this.buildDurationStep();
 
 		default:
 			throw new Error(`Unknown setup step: ${step}`);

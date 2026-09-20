@@ -41,13 +41,13 @@ const sessionPermissionsMessages = [
 ];
 
 const pollCreationMessages = [
-	'🔮 I\'ve consulted the shelves. They were surprisingly unhelpful, so I\'ve brought you three choices.',
-	'🐈‍⬛ My little claws have gathered three tomes. Which one shall we read?',
-	'📚 The shelves have been searched, the candles have been lit, and I have three suggestions.',
-	'📜 I have brought forth three tomes from the stacks. Surely one shall please the coven.',
-	'🌿 The reading circle is hungry. I have prepared three offerings.',
+	'🔮 I\'ve consulted the shelves. They were surprisingly unhelpful, so I\'ve brought you some choices.',
+	'🐈‍⬛ My little claws have gathered some tomes. Which one shall we read?',
+	'📚 The shelves have been searched, the candles have been lit, and I have a few suggestions.',
+	'📜 I have brought forth these tomes from the stacks. Surely one shall please the coven.',
+	'🌿 The reading circle is hungry. I have prepared the offerings.',
 	'🌙 I\'ve done the summoning. You lot can handle the voting.',
-	'✨ Three books have crossed my path. I suspect the library is trying to tell us something.',
+	'✨ These books have crossed my path. I suspect the library is trying to tell us something.',
 ];
 
 const pollWinnerMessages = [

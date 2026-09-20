@@ -26,7 +26,6 @@ class GuildConfigManager {
 			row.guild_id,
 			row.announcement_channel_id,
 			row.discussion_channel_id,
-			row.poll_duration,
 		);
 	}
 
@@ -80,13 +79,12 @@ class GuildConfigManager {
 		return this.db.run(
 			`
             UPDATE guild_config
-            SET announcement_channel_id = ?, discussion_channel_id = ?, poll_duration = ?, updated_at = unixepoch()
+            SET announcement_channel_id = ?, discussion_channel_id = ?, updated_at = unixepoch()
             WHERE guild_id = ?
             `,
 			[
 				config.announcementChannelId ?? null,
 				config.discussionChannelId ?? null,
-				config.pollDuration ?? null,
 				guildId,
 			],
 		);
@@ -96,7 +94,6 @@ class GuildConfigManager {
 		const fields = {
 			announcementChannelId: 'announcement_channel_id',
 			discussionChannelId: 'discussion_channel_id',
-			pollDuration: 'poll_duration',
 		};
 
 		const column = fields[key];
@@ -119,7 +116,6 @@ class GuildConfigManager {
 		const fields = {
 			announcementChannelId: 'announcement_channel_id',
 			discussionChannelId: 'discussion_channel_id',
-			pollDuration: 'poll_duration',
 		};
 
 		const column = fields[key];

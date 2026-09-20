@@ -35,13 +35,6 @@ class ConfigureService {
 						: 'Not configured',
 					value: 'discussion',
 				},
-				{
-					label: 'Poll Duration',
-					description: config.pollDuration
-						? `Currently ${config.pollDuration} hours`
-						: 'Not configured',
-					value: 'pollduration',
-				},
 			);
 
 		const closeButton = new ButtonBuilder()
@@ -67,9 +60,6 @@ class ConfigureService {
             `💬 **Discussion Channel:** ${config.discussionChannelId
             	? `<#${config.discussionChannelId}>`
             	: 'Not configured'}\n` +
-            `⏱️ **Poll Duration:** ${config.pollDuration
-            	? `${config.pollDuration} hours`
-            	: 'Not configured'}\n\n` +
             'Select a setting below to modify it.'
 		);
 	}
@@ -140,73 +130,12 @@ class ConfigureService {
 		};
 	}
 
-	buildPollDurationConfigSummary(duration) {
-		const durationSelect = new StringSelectMenuBuilder()
-			.setCustomId('config_poll_duration')
-			.setPlaceholder('Select a poll duration')
-			.addOptions(
-				{
-					label: '24 hours',
-					value: '24',
-				},
-				{
-					label: '3 days',
-					value: '72',
-				},
-				{
-					label: '1 week',
-					value: '168',
-				},
-				{
-					label: '2 weeks',
-					value: '336',
-				},
-			);
-
-		const backButton = new ButtonBuilder()
-			.setCustomId('config_back')
-			.setLabel('⬅️ Back')
-			.setStyle(ButtonStyle.Secondary);
-
-		return {
-			content:
-            '⚙️ **Poll Duration**\n\n' +
-            'Currently:\n' +
-            `${formatDuration(duration)}\n` +
-            'Select a new duration:\n',
-			components: [
-				new ActionRowBuilder().addComponents(durationSelect),
-				new ActionRowBuilder().addComponents(
-					backButton,
-				),
-			],
-		};
-	}
-
-	formatDuration(hours) {
-		if (hours < 24) {
-			return `${hours} hours`;
-		}
-
-		const days = hours / 24;
-
-		if (days === 1) {
-			return '1 day';
-		}
-
-		return `${days} days`;
-	}
-
 	async setAnnouncementChannel(guildId, channelId) {
 		return this.guildConfigManager.editConfig(guildId, 'announcementChannelId', channelId);
 	}
 
 	async setDiscussionChannelId(guildId, channelId) {
 		return this.guildConfigManager.editConfig(guildId, 'discussionChannelId', channelId);
-	}
-
-	async setPollDuration(guildId, duration) {
-		return this.guildConfigManager.editConfig(guildId, 'pollDuration', duration);
 	}
 
 	async clearSetting(guildId, setting) {
