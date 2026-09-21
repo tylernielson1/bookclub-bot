@@ -6,7 +6,7 @@ const BookPollService = require('./src/services/BookPollService');
 const ConfigureService = require('./src/services/ConfigureService');
 const EventService = require('./src/services/EventService');
 const SetupService = require('./src/services/SetupService');
-const { connectCache } = require('./src/cache');
+const { connectCache, pollWizardManager } = require('./src/cache');
 const { pollManager, guildConfigManager, eventManager } = require('./src/db');
 
 require('dotenv').config();
@@ -26,7 +26,7 @@ client.once(Events.ClientReady, (readyClient) => {
 	const configureService = new ConfigureService(guildConfigManager);
 	client.configureService = configureService;
 
-	const bookPollService = new BookPollService(client, pollManager, guildConfigManager);
+	const bookPollService = new BookPollService(client, pollManager, guildConfigManager, pollWizardManager);
 	client.bookPollService = bookPollService;
 	bookPollService.start();
 

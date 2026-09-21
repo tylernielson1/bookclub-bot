@@ -1,5 +1,6 @@
 const CacheManager = require('./managers/CacheManager');
 const SessionManager = require('./managers/SessionManager');
+const PollWizardManager = require('./managers/PollWizardManager');
 const RedisCacheStore = require('./redis/RedisCacheStore');
 
 require('dotenv').config();
@@ -10,6 +11,7 @@ const redisStore = new RedisCacheStore(
 
 const cacheManager = new CacheManager(redisStore);
 const sessionManager = new SessionManager(redisStore);
+const pollWizardManager = new PollWizardManager(redisStore);
 
 async function connectCache() {
 	await redisStore.connect();
@@ -18,5 +20,6 @@ async function connectCache() {
 module.exports = {
 	cacheManager,
 	sessionManager,
+	pollWizardManager,
 	connectCache,
 };

@@ -538,15 +538,15 @@ async function handlePollCreationComponent(interaction) {
 	switch (action) {
 	case 'bookpoll_next': {
 		await interaction.deferUpdate();
-		const view = pollService.buildPollWizard(interaction);
+		const view = await pollService.buildPollWizard(interaction);
 		return interaction.editReply(view);
 	}
 	case 'bookpoll_title-author': {
-		const modal = pollService.buildPollWizardModal(interaction, 'titleAuthor');
+		const modal = await pollService.buildPollWizardModal(interaction, 'titleAuthor');
 		return interaction.showModal(modal);
 	}
 	case 'bookpoll_isbn': {
-		const modal = pollService.buildPollWizardModal(interaction, 'isbn');
+		const modal = await pollService.buildPollWizardModal(interaction, 'isbn');
 		return interaction.showModal(modal);
 	}
 	case 'bookpoll_modal_title-author': {
@@ -586,7 +586,7 @@ async function handlePollCreationComponent(interaction) {
 	}
 	case 'bookpoll_cancel': {
 		await interaction.deferUpdate();
-		pollService.cancelPollWizard(interaction);
+		await pollService.cancelPollWizard(interaction);
 		return interaction.editReply({
 			content: 'Poll Creation cancelled.',
 			embeds: [],
@@ -602,7 +602,7 @@ async function handlePollCreationComponent(interaction) {
 
 function parseStartDateChange(value, event, offset) {
 	const newDate = parseDate(value);
-	const time = DateTime.fromSeconds(event.startTime, {
+	const time = DateTime.fromMillis(event.startTime, {
 		zone: 'America/Chicago',
 	});
 
@@ -628,7 +628,7 @@ function parseStartDateChange(value, event, offset) {
 }
 
 function parseStartTimeChange(value, event, offset) {
-	const date = DateTime.fromSeconds(event.startTime, {
+	const date = DateTime.fromMillis(event.startTime, {
 		zone: 'America/Chicago',
 	});
 	const newTime = parseTime(value);

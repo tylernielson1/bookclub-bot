@@ -8,32 +8,32 @@ class PollWizardManager {
 		this.store = store;
 	}
 
-	key(messageId) {
-		return `${POLL_WIZARD_CACHE_PREFIX}:${messageId}`;
+	key(guildId, userId) {
+		return `${POLL_WIZARD_CACHE_PREFIX}:${guildId}-${userId}`;
 	}
 
-	async set(key, session) {
+	async set(guildId, userId, session) {
 		return this.store.set(
-			this.key(key),
-			session.toJson(),
+			this.key(guildId, userId),
+			session.toJSON(),
 			WIZARD_TTL,
 		);
 	}
 
-	async get(key) {
-		const data = await this.store.get(this.key(key));
+	async get(guildId, userId) {
+		const data = await this.store.get(this.key(guildId, userId));
 
 		if (!data) return null;
 
 		return PollWizardSession.fromJSON(data);
 	}
 
-	async delete(key) {
-		this.store.delete(this.key(key));
+	async delete(guildId, userId) {
+		await this.store.delete(this.key(guildId, userId));
 	}
 
 	async clear() {
-		this.store.flushPrefix(POLL_WIZARD_CACHE_PREFIX);
+		await this.store.flushPrefix(POLL_WIZARD_CACHE_PREFIX);
 	}
 }
 
