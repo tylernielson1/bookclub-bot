@@ -1,53 +1,72 @@
 const BookPollView = require('../ui/BookPollView');
 const FamiliarMessages = require('../utils/FamiliarMessages');
 const { openLibraryClient } = require('../api');
+const PollWizardSession = require('../cache/entities/PollWizardSession');
 
 class BookPollService {
-	constructor(client, pollManager, guildConfigManager, pollWizardManager = null) {
+	constructor(client, pollManager, guildConfigManager, pollWizardManager) {
 		this.client = client;
 		this.pollManager = pollManager;
 		this.guildConfigManager = guildConfigManager;
-		this.pollWizards = pollWizardManager ?? new Map();
+		this.pollWizardManager = pollWizardManager;
 	}
 
-	startPollWizard(interaction, pollName, bookCount) {
-		if (this.pollWizards.has(interaction.user.id)) {
+	getPollWizard(interaction) {
+		return this.pollWizardManager.get(
+			interaction.guildId,
+			interaction.user.id,
+		);
+	}
+
+	setPollWizard(interaction, wizard) {
+		return this.pollWizardManager.set(
+			interaction.guildId,
+			interaction.user.id,
+			wizard,
+		);
+	}
+
+	deletePollWizard(interaction) {
+		return this.pollWizardManager.delete(
+			interaction.guildId,
+			interaction.user.id,
+		);
+	}
+
+	async startPollWizard(interaction, pollName, bookCount) {
+		const existingWizard = await this.getPollWizard(interaction);
+		if (existingWizard) {
 			throw new Error('You already have a book poll in progress.');
 		}
 
-		const wizard = {
+		const wizard = new PollWizardSession({
 			userId: interaction.user.id,
 			guildId: interaction.guildId,
 			channelId: interaction.channelId,
 			pollName,
 			bookCount,
-			inputs: [],
-			currentBook: 1,
-			duration: null,
-			decideTies: false,
-		};
+		});
 
-		this.pollWizards.set(interaction.user.id, wizard);
+		await this.setPollWizard(interaction, wizard);
 
 		return BookPollView.buildPollWizardStart(wizard);
 	}
 
-	buildPollWizard(interaction) {
-		if (!this.pollWizards.has(interaction.user.id)) {
+	async buildPollWizard(interaction) {
+		const wizard = await this.getPollWizard(interaction);
+
+		if (!wizard) {
 			throw new Error('No book poll in progress.');
 		}
-
-		const wizard = this.pollWizards.get(interaction.user.id);
 
 		return BookPollView.buildPollWizardInput(wizard);
 	}
 
-	buildPollWizardModal(interaction, modalType) {
-		if (!this.pollWizards.has(interaction.user.id)) {
+	async buildPollWizardModal(interaction, modalType) {
+		const wizard = await this.getPollWizard(interaction);
+		if (!wizard) {
 			throw new Error('No book poll in progress.');
 		}
-
-		const wizard = this.pollWizards.get(interaction.user.id);
 
 		if (modalType === 'titleAuthor') {
 			return BookPollView.buildTitleAuthorModal(wizard);
@@ -62,11 +81,10 @@ class BookPollService {
 
 
 	async handleBookInput(interaction, type) {
-		if (!this.pollWizards.has(interaction.user.id)) {
+		const wizard = await this.getPollWizard(interaction);
+		if (!wizard) {
 			throw new Error('No book poll in progress.');
 		}
-
-		const wizard = this.pollWizards.get(interaction.user.id);
 
 		let input;
 
@@ -103,37 +121,41 @@ class BookPollService {
 		wizard.currentBook++;
 
 		if (wizard.inputs.length < wizard.bookCount) {
+			await this.setPollWizard(interaction, wizard);
 			return BookPollView.buildPollWizardInput(wizard);
 		}
 
 		await this.enrichBooks(wizard);
 
+		await this.setPollWizard(interaction, wizard);
 		return BookPollView.buildPollWizardDurationInput(wizard);
 	}
 
-	handlePollWizardDuration(interaction) {
-		if (!this.pollWizards.has(interaction.user.id)) {
+	async handlePollWizardDuration(interaction) {
+		const wizard = await this.getPollWizard(interaction);
+		if (!wizard) {
 			throw new Error('No book poll in progress.');
 		}
 
-		const wizard = this.pollWizards.get(interaction.user.id);
 		const duration = Number(interaction.values[0]);
 
 		wizard.duration = duration;
 
+		await this.setPollWizard(interaction, wizard);
 		return BookPollView.buildPollWizardTiebreakerInput(wizard);
 	}
 
-	handlePollWizardTiebreaker(interaction) {
-		if (!this.pollWizards.has(interaction.user.id)) {
+	async handlePollWizardTiebreaker(interaction) {
+		const wizard = await this.getPollWizard(interaction);
+		if (!wizard) {
 			throw new Error('No book poll in progress.');
 		}
 
-		const wizard = this.pollWizards.get(interaction.user.id);
 		const tiebreaker = Number(interaction.values[0]);
 
 		wizard.decideTies = tiebreaker;
 
+		await this.setPollWizard(interaction, wizard);
 		return BookPollView.buildPollWizardConfirmation(wizard);
 	}
 
@@ -189,11 +211,10 @@ class BookPollService {
 	}
 
 	async handlePollWizardConfirm(interaction) {
-		if (!this.pollWizards.has(interaction.user.id)) {
-			throw new Error('No book poll in progress');
+		const wizard = await this.getPollWizard(interaction);
+		if (!wizard) {
+			throw new Error('No book poll in progress.');
 		}
-
-		const wizard = this.pollWizards.get(interaction.user.id);
 
 		const pollMessage = await this.createPoll(
 			wizard.guildId,
@@ -204,15 +225,13 @@ class BookPollService {
 			wizard.decideTies,
 		);
 
-		this.pollWizards.delete(interaction.user.id);
+		await this.deletePollWizard(interaction);
 
 		return pollMessage;
 	}
 
-	cancelPollWizard(interaction) {
-		if (this.pollWizards.has(interaction.user.id)) {
-			this.pollWizards.delete(interaction.user.id);
-		}
+	async cancelPollWizard(interaction) {
+		await this.deletePollWizard(interaction);
 	}
 
 	async createPoll(guildId, channelId, books, pollName, duration, breakTies) {

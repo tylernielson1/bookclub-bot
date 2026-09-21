@@ -1,14 +1,26 @@
 class PollWizardSession {
-	constructor(userId, guildId, channelId, pollName, bookCount) {
+	constructor({
+		userId,
+		guildId,
+		channelId,
+		pollName,
+		bookCount,
+		inputs = [],
+		currentBook = 1,
+		duration = null,
+		decideTies = false,
+		books = [],
+	}) {
 		this.userId = userId;
 		this.guildId = guildId;
 		this.channelId = channelId;
 		this.pollName = pollName;
 		this.bookCount = bookCount;
-		this.inputs = [];
-		this.currentBook = 0;
-		this.duration = 0;
-		this.decideTies = false;
+		this.inputs = inputs;
+		this.currentBook = currentBook;
+		this.duration = duration;
+		this.decideTies = decideTies;
+		this.books = books;
 	}
 
 	toJSON() {
@@ -22,23 +34,12 @@ class PollWizardSession {
 			currentBook: this.currentBook,
 			duration: this.duration,
 			decideTies: this.decideTies,
+			books: this.books,
 		};
 	}
 
 	static fromJSON(data) {
-		const pollWizard = new PollWizardSession(
-			data.userId,
-			data.guildId,
-			data.channelId,
-			data.pollName,
-			data.bookCount,
-			data.inputs,
-			data.currentBook,
-			data.duration,
-			data.decideTies,
-		);
-
-		return pollWizard;
+		return new PollWizardSession(data);
 	}
 }
 

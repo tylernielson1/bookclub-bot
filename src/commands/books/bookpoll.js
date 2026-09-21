@@ -28,7 +28,7 @@ module.exports = {
 		}
 
 		try {
-			const wizard = pollService.startPollWizard(
+			const wizard = await pollService.startPollWizard(
 				interaction,
 				pollName,
 				bookCount,
