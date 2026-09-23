@@ -19,7 +19,8 @@ Once you've added these values to a `.env` file and read the above section, you 
 - [X] Event creation, rsvp, and editing
 - [X] Dockerization of app
 - [X] Updated polling functionality for per-poll customization
-- [ ] Event Clean Up & Optional Event Descriptions
+- [X] Event Clean Up & Optional Event Descriptions
+- [ ] Event Edit Notifications
 - [ ] Trigger warning search, using doesthedogdie.com
 - [ ] Refactoring to a consistent architecture
 - [ ] Logging Framework Implementation
