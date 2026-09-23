@@ -18,8 +18,8 @@ Once you've added these values to a `.env` file and read the above section, you 
 ## Planned functionality/Features
 - [X] Event creation, rsvp, and editing
 - [X] Dockerization of app
+- [X] Updated polling functionality for per-poll customization
+- [ ] Event Clean Up & Optional Event Descriptions
 - [ ] Trigger warning search, using doesthedogdie.com
 - [ ] Refactoring to a consistent architecture
-- [ ] Bracket Command, for book voting bracket
-- [X] Event Clean Up & Optional Event Descriptions
 - [ ] Logging Framework Implementation
